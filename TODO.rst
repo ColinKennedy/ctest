@@ -28,3 +28,6 @@ Misc
 
 - Make sure README badges work
 - Add documentation (doxygen?)
+- clangtidy
+- cppcheck
+- Update CI OS / compiler versions

@@ -91,6 +91,18 @@ jobs:
           # Reference: https://stackoverflow.com/a/67448797
           cmake --build build --config ${{matrix.build_type}}
 
+      - name: Check folder
+        run: |
+          ls ./build
+
+      - name: Check folder 2
+        run: |
+          ls ./build/tests
+
+      - name: Check folder 3
+        run: |
+          ls ./build/tests/${{matrix.build_type}}
+
       - name: Test
         run: |
           ./tests/${{matrix.build_type}}/run_it
