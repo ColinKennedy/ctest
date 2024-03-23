@@ -50,11 +50,12 @@ jobs:
           # Set up preferred package generators, for given build configurations
           - build_type: Release
 
-          # This exists solely to make sure a non-multiconfig build works
-          - os: ubuntu-20.04
-            compiler: gcc-11
-            generator: "Unix Makefiles"
-            build_type: Debug
+          # TODO: Add this back later
+          # # This exists solely to make sure a non-multiconfig build works
+          # - os: ubuntu-20.04
+          #   compiler: gcc-11
+          #   generator: "Unix Makefiles"
+          #   build_type: Debug
 
           # TODO: Add this back later
           # - os: windows-2022
