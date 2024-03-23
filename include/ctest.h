@@ -16,6 +16,10 @@
 #ifndef CTEST_H
 #define CTEST_H
 
+#ifdef __GNUC__
+#pragma GCC system_header
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -265,6 +269,7 @@ static char ctest_errorbuffer[MSG_SIZE];
 static jmp_buf ctest_err;
 static int color_output = 1;
 static const char* suite_name;
+static const char* test_expression;
 
 typedef int (*ctest_filter_func)(struct ctest*);
 
@@ -478,7 +483,16 @@ static int suite_all(struct ctest* t) {
 }
 
 static int suite_filter(struct ctest* t) {
-    return strncmp(suite_name, t->ssname, strlen(suite_name)) == 0;
+    return (
+        // Matching suite name
+        strncmp(suite_name, t->ssname, strlen(suite_name)) == 0
+        && (
+            // No test filter
+            test_expression == NULL || test_expression[0] == '\0'
+            // ... Or matching test name
+            || strncmp(test_expression, t->ttname, strlen(test_expression)) == 0
+        )
+    );
 }
 
 static void color_print(const char* color, const char* text) {
@@ -525,6 +539,10 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
     if (argc == 2) {
         suite_name = argv[1];
         filter = suite_filter;
+    } else if (argc == 3) {
+        suite_name = argv[1];
+        test_expression = argv[2];
+        filter = suite_filter;
     }
 #ifdef CTEST_NO_COLORS
     color_output = 0;
@@ -560,7 +578,7 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
             ctest_errorbuffer[0] = 0;
             ctest_errorsize = MSG_SIZE-1;
             ctest_errormsg = ctest_errorbuffer;
-            printf("TEST %d/%d %s:%s ", idx, total, test->ssname, test->ttname);
+            printf("TEST %d/%d %s:%s\n", idx, total, test->ssname, test->ttname);
             fflush(stdout);
             if (test->skip) {
                 color_print(ANSI_BYELLOW, "[SKIPPED]");
@@ -604,6 +622,10 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
 
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
 #endif
 
 #endif

@@ -14,6 +14,11 @@
  */
 
 #include <stdlib.h>
+
+#define CTEST_MAIN
+
+#define CTEST_SEGFAULT
+
 #include "ctest.h"
 
 // basic test without setup/teardown
@@ -22,7 +27,7 @@ CTEST(suite1, test1) {
 
 // there are many different ASSERT macro's (see ctest.h)
 CTEST(suite1, test2) {
-    ASSERT_EQUAL(1,2);
+    ASSERT_EQUAL(1, 2);
 }
 
 CTEST(suite2, test1) {
@@ -235,3 +240,5 @@ CTEST(ctest, test_str_contains) {
     ASSERT_STRSTR("Hello", "ello");
     ASSERT_NOT_STRSTR("Hello", "ello");
 }
+
+int main(int argc, const char *argv[]) { return ctest_main(argc, argv); }

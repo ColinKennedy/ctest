@@ -1,6 +1,14 @@
-# CTEST
+# CTest
 
-ctest is a unit test framework for software written in C/C++.
+|             |                                                                                                                                                                               |
+|-------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **tests**   | ![dependabot](https://img.shields.io/badge/dependabot-025E8C?style=for-the-badge&logo=dependabot&logoColor=white)                                                              |
+| **package** | ![OSes](https://img.shields.io/badge/os-linux%20%7C%20macOS%20%7C%20windows-blue) ![commits-since](https://img.shields.io/github/commits-since/ColinKennedy/ctest/v1.0.0.svg) |
+
+
+CTest is a unit test framework for software written in C/C++. It's a fork of
+[bvdberg/ctest](https://github.com/bvdberg/ctest/fork) with some notable
+differences.
 
 Features:
 * adding tests with minimal hassle (no manual adding to suites or testlists!)
@@ -13,11 +21,11 @@ Features:
 * it's small (a little over 300 lines of code!)
 * it's easy to integrate (only 1 header file)
 * has SKIP option to skip certain test (no commenting test out anymore)
-* Linux + OS/X support
+* Windows, Linux, OS/X support
 
-![Sample output](ctest_output.png)
+![ctest_output](https://github.com/ColinKennedy/ctest/assets/10103049/95a83d54-0d22-4228-a828-0a10a126098f)
 
-## test example
+## Test example
 ```c
 CTEST(suite, test1) {
     ASSERT_STR("foo", "foo");
@@ -36,7 +44,7 @@ CTEST(suite, test_dbl) {
 NO further typing is needed! ctest does the rest.
 
 
-## example output when running ctest:
+## Example CTest Output
 ```bash
 $ ./test
 TEST 1/2 suite1:test1 [OK]
@@ -54,7 +62,7 @@ will run all tests from suites starting with 'timer'
 NOTE: when piping output to a file/process, ctest will not color the output
 
 
-## Fixtures:
+## Fixtures
 A testcase with a setup()/teardown() is described below. An unsigned
 char buffer is malloc-ed before each test in the suite and freed afterwards.
 ```c
@@ -121,3 +129,8 @@ disabled also when stdout is piped to file).
 The CTEST_COLOR_OK will turn the [OK] messages green if enabled. Some users
 only want failing tests to draw attention and can leave this out then.
 
+## How To Test
+```sh
+CC=`which gcc` CXX=`which g++` cmake -S . -B build
+cmake --build build
+```
