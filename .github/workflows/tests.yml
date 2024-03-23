@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "master"
+      - "add_ci"
   pull_request:
     branches:
       - "master"
@@ -83,11 +84,11 @@ jobs:
 
       - name: Configure CMake
         run: |
-          cmake -S . -B ./build -G "${{matrix.generator}}" -DCMAKE_BUILD_TYPE:STRING=${{matrix.build_type}}
+          cmake -S . -B ./build -G "${{matrix.generator}}" -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
 
       - name: Build
         run: |
-          cmake --build build --config ${{matrix.build_type}}
+          cmake --build build
 
       - name: Test
         run: |
