@@ -31,3 +31,4 @@ Misc
 - clangtidy
 - cppcheck
 - Update CI OS / compiler versions
+- Do all TODO notes

@@ -16,9 +16,17 @@
 #ifndef CTEST_H
 #define CTEST_H
 
-#ifdef __GNUC__
+#if defined(__clang__)
+// https://clang.llvm.org/docs/UsersManual.html#controlling-diagnostics-via-pragmas
+#pragma clang system_header
+#pragma clang diagnostic ignored "-Wunused-parameter"
+#pragma clang diagnostic ignored "-Werror"
+#elif defined(__GNUC__) || defined(__GNUG__)
 #pragma GCC system_header
+#elif defined(_MSC_VER)
+// TODO: Finish this one?
 #endif
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -624,8 +632,13 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
 }
 #endif
 
-#ifdef __GNUC__
+#if defined(__clang__)
+// https://clang.llvm.org/docs/UsersManual.html#controlling-diagnostics-via-pragmas
+#pragma clang diagnostic pop
+#elif defined(__GNUC__) || defined(__GNUG__)
 #pragma GCC diagnostic pop
+#elif defined(_MSC_VER)
+// TODO: Finish this one?
 #endif
 
 #endif
