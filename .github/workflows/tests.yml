@@ -92,4 +92,4 @@ jobs:
 
       - name: Test
         run: |
-          ./build/tests/run_it
+          ./tests/${{matrix.build_type}}/run_it
