@@ -518,7 +518,14 @@ static void sighandler(int signum)
     const char msg_nocolor[] = "[SIGSEGV: Segmentation fault]\n";
 
     const char* msg = color_output ? msg_color : msg_nocolor;
-    write(STDOUT_FILENO, msg, (unsigned int)strlen(msg));
+
+#ifdef __unix__
+    int stdout_file_descriptor = STDOUT_FILENO;
+#elif defined(WIN32) || defined(_WIN32)
+    int stdout_file_descriptor = _fileno(stdout);
+#endif
+
+    write(stdout_file_descriptor, msg, (unsigned int)strlen(msg));
 
     /* "Unregister" the signal handler and send the signal back to the process
      * so it can terminate as expected */
