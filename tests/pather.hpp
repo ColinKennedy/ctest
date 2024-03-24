@@ -12,7 +12,6 @@ std::string get_current_directory()
 {
     char buffer[MAX_PATH];
     GetModuleFileNameA(NULL, buffer, MAX_PATH);
-    std::string path(buffer);
 
     std::string path(buffer);
 

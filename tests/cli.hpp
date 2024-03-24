@@ -22,6 +22,17 @@ namespace cli
         std::string std_out;
     };
 
+#if defined(_WIN32)
+int WIFEXITED(int status) { return (status == -1) ? 1 : 0; }
+int WEXITSTATUS(int status) { return (status == 0) ? 1 : 0; }
+#endif
+
+#ifdef __MSC_VER
+#define popen(...) _popen(__VA_ARGS__)
+#define pclose(...) _pclose(__VA_ARGS__)
+#endif
+
+
     Result execute_command(std::string const command)
     {
         FILE* pipe = popen(command.c_str(), "r");
@@ -35,7 +46,10 @@ namespace cli
         std::array<char, 128> buffer;
         std::string std_out;
 
-        while (std::fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
+        while (
+            std::fgets(buffer.data(), static_cast<int>(buffer.size()), pipe) != nullptr
+        )
+        {
             std_out += buffer.data();
         }
 
