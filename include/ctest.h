@@ -42,6 +42,11 @@ extern "C" {
 #include <stdbool.h> /* bool, true, false */
 #include <stddef.h> /* size_t */
 
+#ifdef _WIN32
+#define PRIdMAX "jd" /* intmax_t */
+#define PRIuMAX "ju" /* uintmax_t */
+#endif
+
 typedef void (*ctest_nullary_run_func)(void);
 typedef void (*ctest_unary_run_func)(void*);
 typedef void (*ctest_setup_func)(void*);
