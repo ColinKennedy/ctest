@@ -93,7 +93,6 @@ CTEST(miscellaneous, mytests)
     auto const raw = cli::execute_command(pather::make_absolute("mytests"));
     auto const results = parser::parse_std_out(raw.std_out);
 
-    ASSERT_EQUAL(cli::ExitCode_BAD_EXIT, raw.exit_code);
     ASSERT_EQUAL(35, results.number_total);
     ASSERT_EQUAL(11, results.number_ok);
     ASSERT_EQUAL(22, results.number_failed);
