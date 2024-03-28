@@ -1,16 +1,14 @@
+- Need to make it so we can have multiple testing files, not just one. But how? Probably cmake or a custom function
+
+
 GitHub Test Runners
 ===================
 
 Jason Turner template
 https://github.com/cpp-best-practices/gui_starter_template/blob/main/.github/workflows/ci.yml
 
-- Debug builds
-- Release builds
-
 - Get the code working in
  - Windows
- - Mac
- - Clang
  - MSVC
 
 - Add more colors for statuses (e.g. [OK] == blue)
