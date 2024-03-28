@@ -18,7 +18,7 @@ jobs:
       matrix:
         os:
           - ubuntu-20.04
-          - macos-10.15
+          - macos-13
           # TODO: Add this back in later
           # - windows-2019
         compiler:
