@@ -267,7 +267,7 @@ void assert_dbl_compare(const char* cmp, double exp, double real, double tol, co
 #include <string.h>
 #include <time.h>
 #if !defined(_WIN32) || defined(__GNUC__)
-#include <unistd.h>
+#include <unistd.h>  // STDOUT_FILENO
 #elif defined(_WIN32)
 #include <io.h>
 #endif
@@ -275,14 +275,17 @@ void assert_dbl_compare(const char* cmp, double exp, double real, double tol, co
 #include <stdlib.h>
 #include <wchar.h>
 
-static size_t ctest_errorsize;
-static char* ctest_errormsg;
+static size_t CTEST_ERROR_SIZE;
+static char* CTEST_ERROR_MESSAGE;
 #define MSG_SIZE 4096
-static char ctest_errorbuffer[MSG_SIZE];
-static jmp_buf ctest_err;
-static int color_output = 1;
-static const char* suite_name;
-static const char* test_expression;
+static char CTEST_ERROR_BUFFER[MSG_SIZE];
+static jmp_buf CTEST_ERROR_;
+static int CTEST_COLOR_OUTPUT = 1;
+
+// We assume that a suite and test size are not > 200
+#define MAX_SIZE 200
+char CTEST_SUITE_NAME[MAX_SIZE];
+char CTEST_TEST_EXPRESSION[MAX_SIZE];
 
 typedef int (*ctest_filter_func)(struct ctest*);
 
@@ -311,15 +314,15 @@ static void print_errormsg(const char* const fmt, ...) CTEST_IMPL_FORMAT_PRINTF(
 
 static void vprint_errormsg(const char* const fmt, va_list ap) {
     // (v)snprintf returns the number that would have been written
-    const int ret = vsnprintf(ctest_errormsg, ctest_errorsize, fmt, ap);
+    const int ret = vsnprintf(CTEST_ERROR_MESSAGE, CTEST_ERROR_SIZE, fmt, ap);
     if (ret < 0) {
-        ctest_errormsg[0] = 0x00;
+        CTEST_ERROR_MESSAGE[0] = 0x00;
     } else {
         const size_t size = (size_t) ret;
-        const size_t s = (ctest_errorsize <= size ? size -ctest_errorsize : size);
-        // ctest_errorsize may overflow at this point
-        ctest_errorsize -= s;
-        ctest_errormsg += s;
+        const size_t s = (CTEST_ERROR_SIZE <= size ? size -CTEST_ERROR_SIZE : size);
+        // CTEST_ERROR_SIZE may overflow at this point
+        CTEST_ERROR_SIZE -= s;
+        CTEST_ERROR_MESSAGE += s;
     }
 }
 
@@ -331,14 +334,14 @@ static void print_errormsg(const char* const fmt, ...) {
 }
 
 static void msg_start(const char* color, const char* title) {
-    if (color_output) {
+    if (CTEST_COLOR_OUTPUT) {
         print_errormsg("%s", color);
     }
     print_errormsg("  %s: ", title);
 }
 
 static void msg_end(void) {
-    if (color_output) {
+    if (CTEST_COLOR_OUTPUT) {
         print_errormsg(ANSI_NORMAL);
     }
     print_errormsg("\n");
@@ -368,7 +371,7 @@ void CTEST_ERR(const char* fmt, ...)
     va_end(argp);
 
     msg_end();
-    longjmp(ctest_err, 1);
+    longjmp(CTEST_ERROR_, 1);
 }
 
 CTEST_IMPL_DIAG_POP()
@@ -495,21 +498,62 @@ static int suite_all(struct ctest* t) {
     return 1;
 }
 
+/// Check if `pattern` is a substring of `candidate`.
+///
+/// @seealso https://stackoverflow.com/a/23457543
+///
+/// @param pattern A sub-string like `"foo*"`.
+/// @param candidate A full string like `"football"`.
+/// @param p The starting position for `pattern`. Used internally.
+/// @param c The starting position for `pattern`. Used internally.
+/// @return If there's a match, return `1`.
+///
+static int glob_text_(const char *pattern, const char *candidate, int p, int c) {
+  if (pattern[p] == '\0') {
+    return candidate[c] == '\0';
+  } else if (pattern[p] == '*') {
+    for (; candidate[c] != '\0'; c++) {
+      if (glob_text_(pattern, candidate, p+1, c))
+        return true;
+    }
+    return glob_text_(pattern, candidate, p+1, c);
+  } else if (pattern[p] != '?' && pattern[p] != candidate[c]) {
+    return false;
+  }  else {
+    return glob_text_(pattern, candidate, p+1, c+1);
+  }
+}
+
+
+/// Check if `pattern` is a substring of `candidate`.
+///
+/// @param pattern A sub-string like `"foo*"`.
+/// @param candidate A full string like `"football"`.
+/// @return If there's a match, return `1`.
+///
+static int glob_text(const char *pattern, const char *candidate) {
+    return glob_text_(pattern, candidate, 0, 0);
+}
+
 static int suite_filter(struct ctest* t) {
     return (
-        // Matching suite name
-        strncmp(suite_name, t->ssname, strlen(suite_name)) == 0
+        (
+            // No suite filter
+            CTEST_SUITE_NAME == NULL || CTEST_SUITE_NAME[0] == '\0'
+            // ... Or a matching suite name
+            || (glob_text(CTEST_SUITE_NAME, t->ssname) == 1)
+        )
         && (
             // No test filter
-            test_expression == NULL || test_expression[0] == '\0'
-            // ... Or matching test name
-            || strncmp(test_expression, t->ttname, strlen(test_expression)) == 0
+            CTEST_TEST_EXPRESSION == NULL || CTEST_TEST_EXPRESSION[0] == '\0'
+            // ... Or a matching test name
+            || (glob_text(CTEST_TEST_EXPRESSION, t->ttname) == 1)
         )
     );
 }
 
 static void color_print(const char* color, const char* text) {
-    if (color_output)
+    if (CTEST_COLOR_OUTPUT)
         printf("%s%s" ANSI_NORMAL "\n", color, text);
     else
         printf("%s\n", text);
@@ -522,9 +566,9 @@ static void sighandler(int signum)
     const char msg_color[] = ANSI_BRED "[SIGSEGV: Segmentation fault]" ANSI_NORMAL "\n";
     const char msg_nocolor[] = "[SIGSEGV: Segmentation fault]\n";
 
-    const char* msg = color_output ? msg_color : msg_nocolor;
+    const char* msg = CTEST_COLOR_OUTPUT ? msg_color : msg_nocolor;
 
-#ifdef __unix__
+#if defined(__unix__) || defined(__APPLE__)
     int stdout_file_descriptor = STDOUT_FILENO;
 #elif defined(WIN32) || defined(_WIN32)
     int stdout_file_descriptor = _fileno(stdout);
@@ -543,6 +587,20 @@ static void sighandler(int signum)
 
 int ctest_main(int argc, const char *argv[]);
 
+/// Add `'*'` as a suffix to `text` in a new `result` buffer if it's needed.
+///
+/// @param text The string which may or may not end in `'*'`. e.g. `"foo"`.
+/// @param result An return argument to save the new string out to.
+///
+void append_wild_char_suffix(const char *text, char *result) {
+    int len = strlen(text);
+    strcpy(result, text);
+
+    if (len == 0 || text[len - 1] != '*') {
+        strcat(result, "*");
+    }
+}
+
 __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[])
 {
     static int total = 0;
@@ -556,18 +614,19 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
     signal(SIGSEGV, sighandler);
 #endif
 
+    // TODO: Using suite_filter twice here is unclean. Separate to a different function, later
     if (argc == 2) {
-        suite_name = argv[1];
+        append_wild_char_suffix(argv[1], CTEST_SUITE_NAME);
         filter = suite_filter;
     } else if (argc == 3) {
-        suite_name = argv[1];
-        test_expression = argv[2];
+        append_wild_char_suffix(argv[1], CTEST_SUITE_NAME);
+        append_wild_char_suffix(argv[2], CTEST_TEST_EXPRESSION);
         filter = suite_filter;
     }
 #ifdef CTEST_NO_COLORS
-    color_output = 0;
+    CTEST_COLOR_OUTPUT = 0;
 #else
-    color_output = isatty(1);
+    CTEST_COLOR_OUTPUT = isatty(1);
 #endif
     clock_t t1 = clock();
 
@@ -595,16 +654,22 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
     for (test = ctest_begin; test != ctest_end; test++) {
         if (test == &CTEST_IMPL_TNAME(suite, test)) continue;
         if (filter(test)) {
-            ctest_errorbuffer[0] = 0;
-            ctest_errorsize = MSG_SIZE-1;
-            ctest_errormsg = ctest_errorbuffer;
-            printf("TEST %d/%d %s:%s\n", idx, total, test->ssname, test->ttname);
+            CTEST_ERROR_BUFFER[0] = 0;
+            CTEST_ERROR_SIZE = MSG_SIZE-1;
+            CTEST_ERROR_MESSAGE = CTEST_ERROR_BUFFER;
+            // TODO: Add colors to the unittest name
+#ifdef CTEST_COLOR_OK
+            printf("TEST %d/%d ", idx, total);
+            printf("%s%s:%s " ANSI_NORMAL, ANSI_WHITE, test->ssname, test->ttname);
+#else
+            printf("TEST %d/%d %s:%s ", idx, total, test->ssname, test->ttname);
+#endif
             fflush(stdout);
             if (test->skip) {
                 color_print(ANSI_BYELLOW, "[SKIPPED]");
                 num_skip++;
             } else {
-                int result = setjmp(ctest_err);
+                int result = setjmp(CTEST_ERROR_);
                 if (result == 0) {
                     if (test->setup && *test->setup) (*test->setup)(test->data);
                     if (test->data)
@@ -620,10 +685,14 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
 #endif
                     num_ok++;
                 } else {
+#ifdef CTEST_COLOR_OK
                     color_print(ANSI_BRED, "[FAIL]");
+#else
+                    printf("[FAIL]\n");
+#endif
                     num_fail++;
                 }
-                if (ctest_errorsize != MSG_SIZE-1) printf("%s", ctest_errorbuffer);
+                if (CTEST_ERROR_SIZE != MSG_SIZE-1) printf("%s", CTEST_ERROR_BUFFER);
             }
             idx++;
         }
@@ -634,7 +703,11 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
     char results[80];
     snprintf(results, sizeof(results), "RESULTS: %d tests (%d ok, %d failed, %d skipped) ran in %.1f ms",
              total, num_ok, num_fail, num_skip, (double)(t2 - t1)*1000.0/CLOCKS_PER_SEC);
+#ifdef CTEST_COLOR_OK
     color_print(color, results);
+#else
+    printf(results);
+#endif
     return num_fail;
 }
 

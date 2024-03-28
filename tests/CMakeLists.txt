@@ -27,14 +27,14 @@ function(create_cli_and_test)
 endfunction()
 
 
-create_cli_and_test(arguments)
-create_cli_and_test(empty)
-create_cli_and_test(single)
-create_cli_and_test(mytests)
+create_cli_and_test(test_arguments)
+create_cli_and_test(test_empty)
+create_cli_and_test(test_single)
+create_cli_and_test(test_mytests)
 
 
 add_executable(run_it
-    main.cpp  # Main "capabilities" tests
+    test_main.cpp
 )
 
 target_include_directories(run_it
@@ -45,11 +45,27 @@ target_include_directories(run_it
 add_dependencies(
     run_it
 
-    arguments
-    empty
-    single
+    test_arguments
+    test_empty
+    test_single
 
-    mytests
+    test_mytests
 )
 
 add_options(run_it)
+
+if(NOT DEFINED TEST_SUITE)
+    set(TEST_SUITE "\"*\"" CACHE STRING "The suite(s) to run tests for.")
+endif()
+
+if(NOT DEFINED TEST_NAME)
+    set(TEST_NAME "\"*\"" CACHE STRING "The individual test(s) to run.")
+endif()
+
+message(DEBUG "$<TARGET_FILE:run_it> ${TEST_SUITE} ${TEST_NAME}")
+
+add_custom_target(
+    test
+    COMMAND $<TARGET_FILE:run_it> "${TEST_SUITE}" "${TEST_NAME}"
+)
+add_dependencies(test run_it)
