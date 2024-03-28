@@ -93,4 +93,5 @@ jobs:
 
       - name: Test
         run: |
-          ./build/tests/${{matrix.build_type}}/run_it
+          # Probably not needed to explicitly build the test. But it's probably fine
+          cmake --build build --config ${{matrix.build_type}} --target test
