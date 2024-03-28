@@ -53,3 +53,12 @@ add_dependencies(
 )
 
 add_options(run_it)
+
+# get_property(run_it_location TARGET run_it PROPERTY LOCATION)
+# message (STATUS "run_it_location == ${run_it_location}")
+# get_target_property(TEST_EXECUTABLE run_it RUNTIME_OUTPUT_DIRECTORY)
+add_custom_target(
+    test
+    COMMAND $<TARGET_FILE:run_it>
+)
+add_dependencies(test run_it)

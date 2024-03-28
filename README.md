@@ -132,5 +132,5 @@ only want failing tests to draw attention and can leave this out then.
 ## How To Test
 ```sh
 CC=`which gcc` CXX=`which g++` cmake -S . -B build
-cmake --build build
+cmake --build build --target test
 ```

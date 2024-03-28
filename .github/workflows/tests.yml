@@ -19,11 +19,10 @@ jobs:
         os:
           - ubuntu-20.04
           - macos-10.15
-          # TODO: Add this back later
+          # TODO: Add this back in later
           # - windows-2019
         compiler:
-          # TODO: Add this back later
-          # - llvm-15.0.2
+          - llvm-15.0.2
           - gcc-11
         generator:
           - "Ninja Multi-Config"
@@ -31,24 +30,20 @@ jobs:
           - Release
           - Debug
 
-        # TODO: Add this back later
-        # exclude:
-        #   # mingw is determined by this author to be too buggy to support
-        #   - os: windows-2019
-        #     compiler: gcc-11
+        exclude:
+          # mingw is determined by this author to be too buggy to support
+          - os: windows-2019
+            compiler: gcc-11
 
         include:
-          # Add appropriate variables for gcov version required. This will intentionally break
-          # if you try to use a compiler that does not have gcov set
-          - compiler: gcc-11
-
-          # TODO: Add this back later
-          # - compiler: llvm-15.0.2
-
-          - os: macos-10.15
-
           # Set up preferred package generators, for given build configurations
           - build_type: Release
+
+          # This exists solely to make sure a non-multiconfig build works
+          - os: ubuntu-20.04
+            compiler: gcc-11
+            generator: "Unix Makefiles"
+            build_type: Debug
 
           # TODO: Add this back later
           # # This exists solely to make sure a non-multiconfig build works

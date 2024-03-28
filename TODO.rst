@@ -7,13 +7,19 @@ https://github.com/cpp-best-practices/gui_starter_template/blob/main/.github/wor
 - Debug builds
 - Release builds
 
-
-
-- Add docstrings to every function
+- Get the code working in
+ - Windows
+ - Mac
+ - Clang
+ - MSVC
 
 - Add more colors for statuses (e.g. [OK] == blue)
 
+- Add docstrings to every function
+
 - Change the macros to be not abbreviated?
+
+- Add a cmake target that runs the unittests tests
 
 
 Badges
