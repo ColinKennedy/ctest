@@ -134,3 +134,10 @@ only want failing tests to draw attention and can leave this out then.
 CC=`which gcc` CXX=`which g++` cmake -S . -B build
 cmake --build build --target test
 ```
+
+TODO Show how to run a specific test or suite of tests
+
+
+
+CC=`which clang` CXX=`which clang++` cmake -S . -B build 
+cmake --build build --target test

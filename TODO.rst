@@ -19,6 +19,8 @@ https://github.com/cpp-best-practices/gui_starter_template/blob/main/.github/wor
 - Change the macros to be not abbreviated?
 - Add a check in case the suite / test size are > 200
 
+- Add missing docstrings
+
 
 Badges
 ======
