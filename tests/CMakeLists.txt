@@ -54,11 +54,18 @@ add_dependencies(
 
 add_options(run_it)
 
-# get_property(run_it_location TARGET run_it PROPERTY LOCATION)
-# message (STATUS "run_it_location == ${run_it_location}")
-# get_target_property(TEST_EXECUTABLE run_it RUNTIME_OUTPUT_DIRECTORY)
+if(NOT DEFINED TEST_SUITE)
+    set(TEST_SUITE "\"*\"" CACHE STRING "The suite(s) to run tests for.")
+endif()
+
+if(NOT DEFINED TEST_NAME)
+    set(TEST_NAME "\"*\"" CACHE STRING "The individual test(s) to run.")
+endif()
+
+message(DEBUG "$<TARGET_FILE:run_it> ${TEST_SUITE} ${TEST_NAME}")
+
 add_custom_target(
     test
-    COMMAND $<TARGET_FILE:run_it>
+    COMMAND $<TARGET_FILE:run_it> "${TEST_SUITE}" "${TEST_NAME}"
 )
 add_dependencies(test run_it)

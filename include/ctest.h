@@ -270,14 +270,14 @@ void assert_dbl_compare(const char* cmp, double exp, double real, double tol, co
 #include <stdlib.h>
 #include <wchar.h>
 
-static size_t ctest_errorsize;
-static char* ctest_errormsg;
+static size_t CTEST_ERROR_SIZE;
+static char* CTEST_ERROR_MESSAGE;
 #define MSG_SIZE 4096
-static char ctest_errorbuffer[MSG_SIZE];
-static jmp_buf ctest_err;
-static int color_output = 1;
-static const char* suite_name;
-static const char* test_expression;
+static char CTEST_ERROR_BUFFER[MSG_SIZE];
+static jmp_buf CTEST_ERROR_;
+static int CTEST_COLOR_OUTPUT = 1;
+static const char* CTEST_SUITE_NAME;
+static const char* CTEST_TEST_EXPRESSION;
 
 typedef int (*ctest_filter_func)(struct ctest*);
 
@@ -306,15 +306,15 @@ static void print_errormsg(const char* const fmt, ...) CTEST_IMPL_FORMAT_PRINTF(
 
 static void vprint_errormsg(const char* const fmt, va_list ap) {
     // (v)snprintf returns the number that would have been written
-    const int ret = vsnprintf(ctest_errormsg, ctest_errorsize, fmt, ap);
+    const int ret = vsnprintf(CTEST_ERROR_MESSAGE, CTEST_ERROR_SIZE, fmt, ap);
     if (ret < 0) {
-        ctest_errormsg[0] = 0x00;
+        CTEST_ERROR_MESSAGE[0] = 0x00;
     } else {
         const size_t size = (size_t) ret;
-        const size_t s = (ctest_errorsize <= size ? size -ctest_errorsize : size);
-        // ctest_errorsize may overflow at this point
-        ctest_errorsize -= s;
-        ctest_errormsg += s;
+        const size_t s = (CTEST_ERROR_SIZE <= size ? size -CTEST_ERROR_SIZE : size);
+        // CTEST_ERROR_SIZE may overflow at this point
+        CTEST_ERROR_SIZE -= s;
+        CTEST_ERROR_MESSAGE += s;
     }
 }
 
@@ -326,14 +326,14 @@ static void print_errormsg(const char* const fmt, ...) {
 }
 
 static void msg_start(const char* color, const char* title) {
-    if (color_output) {
+    if (CTEST_COLOR_OUTPUT) {
         print_errormsg("%s", color);
     }
     print_errormsg("  %s: ", title);
 }
 
 static void msg_end(void) {
-    if (color_output) {
+    if (CTEST_COLOR_OUTPUT) {
         print_errormsg(ANSI_NORMAL);
     }
     print_errormsg("\n");
@@ -363,7 +363,7 @@ void CTEST_ERR(const char* fmt, ...)
     va_end(argp);
 
     msg_end();
-    longjmp(ctest_err, 1);
+    longjmp(CTEST_ERROR_, 1);
 }
 
 CTEST_IMPL_DIAG_POP()
@@ -493,18 +493,18 @@ static int suite_all(struct ctest* t) {
 static int suite_filter(struct ctest* t) {
     return (
         // Matching suite name
-        strncmp(suite_name, t->ssname, strlen(suite_name)) == 0
+        strncmp(CTEST_SUITE_NAME, t->ssname, strlen(CTEST_SUITE_NAME)) == 0
         && (
             // No test filter
-            test_expression == NULL || test_expression[0] == '\0'
+            CTEST_TEST_EXPRESSION == NULL || CTEST_TEST_EXPRESSION[0] == '\0'
             // ... Or matching test name
-            || strncmp(test_expression, t->ttname, strlen(test_expression)) == 0
+            || strncmp(CTEST_TEST_EXPRESSION, t->ttname, strlen(CTEST_TEST_EXPRESSION)) == 0
         )
     );
 }
 
 static void color_print(const char* color, const char* text) {
-    if (color_output)
+    if (CTEST_COLOR_OUTPUT)
         printf("%s%s" ANSI_NORMAL "\n", color, text);
     else
         printf("%s\n", text);
@@ -517,7 +517,7 @@ static void sighandler(int signum)
     const char msg_color[] = ANSI_BRED "[SIGSEGV: Segmentation fault]" ANSI_NORMAL "\n";
     const char msg_nocolor[] = "[SIGSEGV: Segmentation fault]\n";
 
-    const char* msg = color_output ? msg_color : msg_nocolor;
+    const char* msg = CTEST_COLOR_OUTPUT ? msg_color : msg_nocolor;
 
 #if defined(__unix__) || defined(__APPLE__)
     int stdout_file_descriptor = STDOUT_FILENO;
@@ -552,17 +552,17 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
 #endif
 
     if (argc == 2) {
-        suite_name = argv[1];
+        CTEST_SUITE_NAME = argv[1];
         filter = suite_filter;
     } else if (argc == 3) {
-        suite_name = argv[1];
-        test_expression = argv[2];
+        CTEST_SUITE_NAME = argv[1];
+        CTEST_TEST_EXPRESSION = argv[2];
         filter = suite_filter;
     }
 #ifdef CTEST_NO_COLORS
-    color_output = 0;
+    CTEST_COLOR_OUTPUT = 0;
 #else
-    color_output = isatty(1);
+    CTEST_COLOR_OUTPUT = isatty(1);
 #endif
     clock_t t1 = clock();
 
@@ -590,16 +590,16 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
     for (test = ctest_begin; test != ctest_end; test++) {
         if (test == &CTEST_IMPL_TNAME(suite, test)) continue;
         if (filter(test)) {
-            ctest_errorbuffer[0] = 0;
-            ctest_errorsize = MSG_SIZE-1;
-            ctest_errormsg = ctest_errorbuffer;
+            CTEST_ERROR_BUFFER[0] = 0;
+            CTEST_ERROR_SIZE = MSG_SIZE-1;
+            CTEST_ERROR_MESSAGE = CTEST_ERROR_BUFFER;
             printf("TEST %d/%d %s:%s\n", idx, total, test->ssname, test->ttname);
             fflush(stdout);
             if (test->skip) {
                 color_print(ANSI_BYELLOW, "[SKIPPED]");
                 num_skip++;
             } else {
-                int result = setjmp(ctest_err);
+                int result = setjmp(CTEST_ERROR_);
                 if (result == 0) {
                     if (test->setup && *test->setup) (*test->setup)(test->data);
                     if (test->data)
@@ -618,7 +618,7 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
                     color_print(ANSI_BRED, "[FAIL]");
                     num_fail++;
                 }
-                if (ctest_errorsize != MSG_SIZE-1) printf("%s", ctest_errorbuffer);
+                if (CTEST_ERROR_SIZE != MSG_SIZE-1) printf("%s", CTEST_ERROR_BUFFER);
             }
             idx++;
         }
