@@ -615,7 +615,11 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
 #endif
                     num_ok++;
                 } else {
+#ifdef CTEST_COLOR_OK
                     color_print(ANSI_BRED, "[FAIL]");
+#else
+                    printf("[FAIL]\n");
+#endif
                     num_fail++;
                 }
                 if (CTEST_ERROR_SIZE != MSG_SIZE-1) printf("%s", CTEST_ERROR_BUFFER);
