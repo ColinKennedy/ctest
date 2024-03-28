@@ -5,6 +5,8 @@
 
 #define CTEST_SEGFAULT
 
+#define CTEST_COLOR_OK
+
 #include <ctest.h>
 
 #include "cli.hpp"
@@ -67,6 +69,38 @@ CTEST(arguments, suite_and_name_argument)
     ASSERT_EQUAL(parser::TestStatus_OK, test_result.return_status);
 }
 
+CTEST(globbing, suite_and_test_name)
+{
+    auto const raw = cli::execute_command(pather::make_absolute("test_arguments 'su*' 'tes*foo'"));
+    auto const results = parser::parse_std_out(raw.std_out);
+    auto& cases = results.cases;
+
+    ASSERT_EQUAL(1, cases.size());
+    auto const test_result = cases[0];
+    ASSERT_EQUAL(parser::TestStatus_OK, test_result.return_status);
+}
+
+CTEST(globbing, suite_name)
+{
+    auto const raw = cli::execute_command(pather::make_absolute("test_arguments 'ano*'"));
+    auto const results = parser::parse_std_out(raw.std_out);
+    auto& cases = results.cases;
+
+    ASSERT_EQUAL(1, cases.size());
+    auto const test_result = cases[0];
+    ASSERT_EQUAL(parser::TestStatus_OK, test_result.return_status);
+}
+
+CTEST(globbing, test_name)
+{
+    auto const raw = cli::execute_command(pather::make_absolute("test_arguments another 'test*'"));
+    auto const results = parser::parse_std_out(raw.std_out);
+    auto& cases = results.cases;
+
+    ASSERT_EQUAL(1, cases.size());
+    auto const test_result = cases[0];
+    ASSERT_EQUAL(parser::TestStatus_OK, test_result.return_status);
+}
 
 CTEST(invalids, unknown_suite)
 {

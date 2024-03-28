@@ -11,7 +11,7 @@ CTEST(suitey, test1) { ASSERT_TRUE(true); }
 
 CTEST(suitey, test2) { ASSERT_TRUE(true); }
 
-CTEST(suitey, test3) { ASSERT_TRUE(true); }
+CTEST(suitey, test3foo) { ASSERT_TRUE(true); }
 
 CTEST(another, testout) { ASSERT_TRUE(true); }
 

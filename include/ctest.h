@@ -276,8 +276,11 @@ static char* CTEST_ERROR_MESSAGE;
 static char CTEST_ERROR_BUFFER[MSG_SIZE];
 static jmp_buf CTEST_ERROR_;
 static int CTEST_COLOR_OUTPUT = 1;
-static const char* CTEST_SUITE_NAME;
-static const char* CTEST_TEST_EXPRESSION;
+
+// We assume that a suite and test size are not > 200
+#define MAX_SIZE 200
+char CTEST_SUITE_NAME[MAX_SIZE];
+char CTEST_TEST_EXPRESSION[MAX_SIZE];
 
 typedef int (*ctest_filter_func)(struct ctest*);
 
@@ -490,15 +493,56 @@ static int suite_all(struct ctest* t) {
     return 1;
 }
 
+/// Check if `pattern` is a substring of `candidate`.
+///
+/// @seealso https://stackoverflow.com/a/23457543
+///
+/// @param pattern A sub-string like `"foo*"`.
+/// @param candidate A full string like `"football"`.
+/// @param p The starting position for `pattern`. Used internally.
+/// @param c The starting position for `pattern`. Used internally.
+/// @return If there's a match, return `1`.
+///
+static int glob_text_(const char *pattern, const char *candidate, int p, int c) {
+  if (pattern[p] == '\0') {
+    return candidate[c] == '\0';
+  } else if (pattern[p] == '*') {
+    for (; candidate[c] != '\0'; c++) {
+      if (glob_text_(pattern, candidate, p+1, c))
+        return true;
+    }
+    return glob_text_(pattern, candidate, p+1, c);
+  } else if (pattern[p] != '?' && pattern[p] != candidate[c]) {
+    return false;
+  }  else {
+    return glob_text_(pattern, candidate, p+1, c+1);
+  }
+}
+
+
+/// Check if `pattern` is a substring of `candidate`.
+///
+/// @param pattern A sub-string like `"foo*"`.
+/// @param candidate A full string like `"football"`.
+/// @return If there's a match, return `1`.
+///
+static int glob_text(const char *pattern, const char *candidate) {
+    return glob_text_(pattern, candidate, 0, 0);
+}
+
 static int suite_filter(struct ctest* t) {
     return (
-        // Matching suite name
-        strncmp(CTEST_SUITE_NAME, t->ssname, strlen(CTEST_SUITE_NAME)) == 0
+        (
+            // No suite filter
+            CTEST_SUITE_NAME == NULL || CTEST_SUITE_NAME[0] == '\0'
+            // ... Or a matching suite name
+            || (glob_text(CTEST_SUITE_NAME, t->ssname) == 1)
+        )
         && (
             // No test filter
             CTEST_TEST_EXPRESSION == NULL || CTEST_TEST_EXPRESSION[0] == '\0'
-            // ... Or matching test name
-            || strncmp(CTEST_TEST_EXPRESSION, t->ttname, strlen(CTEST_TEST_EXPRESSION)) == 0
+            // ... Or a matching test name
+            || (glob_text(CTEST_TEST_EXPRESSION, t->ttname) == 1)
         )
     );
 }
@@ -538,6 +582,20 @@ static void sighandler(int signum)
 
 int ctest_main(int argc, const char *argv[]);
 
+/// Add `'*'` as a suffix to `text` in a new `result` buffer if it's needed.
+///
+/// @param text The string which may or may not end in `'*'`. e.g. `"foo"`.
+/// @param result An return argument to save the new string out to.
+///
+void append_wild_char_suffix(const char *text, char *result) {
+    int len = strlen(text);
+    strcpy(result, text);
+
+    if (len == 0 || text[len - 1] != '*') {
+        strcat(result, "*");
+    }
+}
+
 __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[])
 {
     static int total = 0;
@@ -551,12 +609,13 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
     signal(SIGSEGV, sighandler);
 #endif
 
+    // TODO: Using suite_filter twice here is unclean. Separate to a different function, later
     if (argc == 2) {
-        CTEST_SUITE_NAME = argv[1];
+        append_wild_char_suffix(argv[1], CTEST_SUITE_NAME);
         filter = suite_filter;
     } else if (argc == 3) {
-        CTEST_SUITE_NAME = argv[1];
-        CTEST_TEST_EXPRESSION = argv[2];
+        append_wild_char_suffix(argv[1], CTEST_SUITE_NAME);
+        append_wild_char_suffix(argv[2], CTEST_TEST_EXPRESSION);
         filter = suite_filter;
     }
 #ifdef CTEST_NO_COLORS
@@ -593,6 +652,7 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
             CTEST_ERROR_BUFFER[0] = 0;
             CTEST_ERROR_SIZE = MSG_SIZE-1;
             CTEST_ERROR_MESSAGE = CTEST_ERROR_BUFFER;
+            // TODO: Add colors to the unittest name
             printf("TEST %d/%d %s:%s\n", idx, total, test->ssname, test->ttname);
             fflush(stdout);
             if (test->skip) {

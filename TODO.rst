@@ -12,12 +12,12 @@ https://github.com/cpp-best-practices/gui_starter_template/blob/main/.github/wor
  - MSVC
 
 - Add more colors for statuses (e.g. [OK] == blue)
+   - Make test tes name white
 
 - Add docstrings to every function
 
 - Change the macros to be not abbreviated?
-
-- Add a cmake target that runs the unittests tests
+- Add a check in case the suite / test size are > 200
 
 
 Badges
