@@ -519,7 +519,7 @@ static void sighandler(int signum)
 
     const char* msg = color_output ? msg_color : msg_nocolor;
 
-#ifdef __unix__ || __APPLE__
+#if defined(__unix__) || defined(__APPLE__)
     int stdout_file_descriptor = STDOUT_FILENO;
 #elif defined(WIN32) || defined(_WIN32)
     int stdout_file_descriptor = _fileno(stdout);
