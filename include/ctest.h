@@ -262,7 +262,7 @@ void assert_dbl_compare(const char* cmp, double exp, double real, double tol, co
 #include <string.h>
 #include <time.h>
 #if !defined(_WIN32) || defined(__GNUC__)
-#include <unistd.h>
+#include <unistd.h>  // STDOUT_FILENO
 #elif defined(_WIN32)
 #include <io.h>
 #endif
@@ -519,7 +519,7 @@ static void sighandler(int signum)
 
     const char* msg = color_output ? msg_color : msg_nocolor;
 
-#ifdef __unix__
+#ifdef __unix__ || __APPLE__
     int stdout_file_descriptor = STDOUT_FILENO;
 #elif defined(WIN32) || defined(_WIN32)
     int stdout_file_descriptor = _fileno(stdout);
