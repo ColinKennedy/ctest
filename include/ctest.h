@@ -653,7 +653,12 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
             CTEST_ERROR_SIZE = MSG_SIZE-1;
             CTEST_ERROR_MESSAGE = CTEST_ERROR_BUFFER;
             // TODO: Add colors to the unittest name
+#ifdef CTEST_COLOR_OK
+            printf("TEST %d/%d ", idx, total);
+            printf("%s%s:%s\n" ANSI_NORMAL, ANSI_WHITE, test->ssname, test->ssname);
+#else
             printf("TEST %d/%d %s:%s\n", idx, total, test->ssname, test->ttname);
+#endif
             fflush(stdout);
             if (test->skip) {
                 color_print(ANSI_BYELLOW, "[SKIPPED]");
@@ -693,7 +698,11 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
     char results[80];
     snprintf(results, sizeof(results), "RESULTS: %d tests (%d ok, %d failed, %d skipped) ran in %.1f ms",
              total, num_ok, num_fail, num_skip, (double)(t2 - t1)*1000.0/CLOCKS_PER_SEC);
+#ifdef CTEST_COLOR_OK
     color_print(color, results);
+#else
+    printf(results);
+#endif
     return num_fail;
 }
 

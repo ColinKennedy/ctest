@@ -1,3 +1,4 @@
+- Change every test to be single-lined. Maybe.
 - Need to make it so we can have multiple testing files, not just one. But how? Probably cmake or a custom function
 
 
@@ -10,9 +11,6 @@ https://github.com/cpp-best-practices/gui_starter_template/blob/main/.github/wor
 - Get the code working in
  - Windows
  - MSVC
-
-- Add more colors for statuses (e.g. [OK] == blue)
-   - Make test tes name white
 
 - Add docstrings to every function
 
