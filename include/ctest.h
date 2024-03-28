@@ -655,9 +655,9 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
             // TODO: Add colors to the unittest name
 #ifdef CTEST_COLOR_OK
             printf("TEST %d/%d ", idx, total);
-            printf("%s%s:%s\n" ANSI_NORMAL, ANSI_WHITE, test->ssname, test->ssname);
+            printf("%s%s:%s " ANSI_NORMAL, ANSI_WHITE, test->ssname, test->ttname);
 #else
-            printf("TEST %d/%d %s:%s\n", idx, total, test->ssname, test->ttname);
+            printf("TEST %d/%d %s:%s ", idx, total, test->ssname, test->ttname);
 #endif
             fflush(stdout);
             if (test->skip) {
