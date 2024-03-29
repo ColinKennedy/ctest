@@ -135,9 +135,7 @@ CC=`which gcc` CXX=`which g++` cmake -S . -B build
 cmake --build build --target test
 ```
 
-TODO Show how to run a specific test or suite of tests
-
-
-
-CC=`which clang` CXX=`which clang++` cmake -S . -B build 
+set CXX=C:\Program Files\LLVM\bin\clang++.exe
+set CC=C:\Program Files\LLVM\bin\clang.exe
+cmake -S . -B build
 cmake --build build --target test
