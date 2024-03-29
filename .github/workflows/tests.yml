@@ -29,11 +29,6 @@ jobs:
           - Release
           - Debug
 
-        exclude:
-          # mingw is determined by this author to be too buggy to support
-          - os: windows-2019
-            compiler: gcc-11
-
         include:
           # Set up preferred package generators, for given build configurations
           - build_type: Release
