@@ -71,7 +71,7 @@ CTEST(arguments, suite_and_name_argument)
 
 CTEST(globbing, suite_and_test_name)
 {
-    auto const raw = cli::execute_command(pather::make_absolute("test_arguments 'su*' 'tes*foo'"));
+    auto const raw = cli::execute_command(pather::make_absolute("test_arguments \"su*\" \"tes*foo\""));
     auto const results = parser::parse_std_out(raw.std_out);
     auto& cases = results.cases;
 
@@ -82,7 +82,7 @@ CTEST(globbing, suite_and_test_name)
 
 CTEST(globbing, suite_name)
 {
-    auto const raw = cli::execute_command(pather::make_absolute("test_arguments 'ano*'"));
+    auto const raw = cli::execute_command(pather::make_absolute("test_arguments \"ano*\""));
     auto const results = parser::parse_std_out(raw.std_out);
     auto& cases = results.cases;
 
@@ -93,7 +93,7 @@ CTEST(globbing, suite_name)
 
 CTEST(globbing, test_name)
 {
-    auto const raw = cli::execute_command(pather::make_absolute("test_arguments another 'test*'"));
+    auto const raw = cli::execute_command(pather::make_absolute("test_arguments another \"foo*\""));
     auto const results = parser::parse_std_out(raw.std_out);
     auto& cases = results.cases;
 

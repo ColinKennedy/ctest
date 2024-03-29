@@ -13,6 +13,6 @@ CTEST(suitey, test2) { ASSERT_TRUE(true); }
 
 CTEST(suitey, test3foo) { ASSERT_TRUE(true); }
 
-CTEST(another, testout) { ASSERT_TRUE(true); }
+CTEST(another, foot) { ASSERT_TRUE(true); }
 
 int main(int argc, const char *argv[]) { return ctest_main(argc, argv); }
