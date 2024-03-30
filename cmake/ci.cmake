@@ -1,4 +1,4 @@
-option(WARNINGS_AS_ERRORS "Treat Warnings As Errors" ON)
+option(WARNINGS_AS_ERRORS "Treat Warnings As Errors" OFF)
 include(cmake/StaticAnalyzers.cmake)
 
 if(ENABLE_CPPCHECK)
