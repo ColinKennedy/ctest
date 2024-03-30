@@ -1,4 +1,3 @@
-- Change every test to be single-lined. Maybe.
 - Need to make it so we can have multiple testing files, not just one. But how? Probably cmake or a custom function
 
 
@@ -15,9 +14,7 @@ https://github.com/cpp-best-practices/gui_starter_template/blob/main/.github/wor
 - Add docstrings to every function
 
 - Change the macros to be not abbreviated?
-- Add a check in case the suite / test size are > 200
-
-- Add missing docstrings
+- Add a check in case the suite / test name size are > 200
 
 
 Badges
@@ -32,7 +29,5 @@ Misc
 
 - Make sure README badges work
 - Add documentation (doxygen?)
-- clangtidy
-- cppcheck
 - Update CI OS / compiler versions
 - Do all TODO notes

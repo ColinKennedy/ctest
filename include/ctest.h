@@ -57,6 +57,9 @@ union ctest_run_func_union {
     ctest_unary_run_func unary;
 };
 
+// Reference: https://stackoverflow.com/a/1486931
+#define UNUSED(expr) do { (void)(expr); } while (0)
+
 #define CTEST_IMPL_PRAGMA(x) _Pragma (#x)
 
 #if defined(__GNUC__)
@@ -377,19 +380,36 @@ void CTEST_ERR(const char* fmt, ...)
 CTEST_IMPL_DIAG_POP()
 
 void assert_str(const char* cmp, const char* exp, const char*  real, const char* caller, int line) {
-    if ((!exp ^ !real) || (exp && (
-        (cmp[1] == '=' && ((cmp[0] == '=') ^ (strcmp(exp, real) == 0))) ||
-        (cmp[1] == '~' && ((cmp[0] == '=') ^ (strstr(exp, real) != NULL)))
-    ))) {
+    if (
+        ((!exp && real) || (exp && !real))
+        ||
+        (
+            exp
+            &&
+            (
+                (cmp[1] == '=' && ((cmp[0] == '=') ^ (strcmp(exp, real) == 0)))
+                || (cmp[1] == '~' && ((cmp[0] == '=') ^ (strstr(exp, real) != NULL)))
+            )
+        )
+    ) {
         CTEST_ERR("%s:%d  assertion failed, '%s' %s '%s'", caller, line, exp, cmp, real);
     }
 }
 
 void assert_wstr(const char* cmp, const wchar_t *exp, const wchar_t *real, const char* caller, int line) {
-    if ((!exp ^ !real) || (exp && (
-        (cmp[1] == '=' && ((cmp[0] == '=') ^ (wcscmp(exp, real) == 0))) ||
-        (cmp[1] == '~' && ((cmp[0] == '=') ^ (wcsstr(exp, real) != NULL)))
-    ))) {
+    if (
+        ((!exp && real) || (exp && !real))
+        ||
+        (
+            exp
+            &&
+            (
+                (cmp[1] == '=' && ((cmp[0] == '=') ^ (wcscmp(exp, real) == 0)))
+                || (cmp[1] == '~' && ((cmp[0] == '=') ^ (wcsstr(exp, real) != NULL)))
+            )
+        )
+    )
+    {
         CTEST_ERR("%s:%d  assertion failed, '%ls' %s '%ls'", caller, line, exp, cmp, real);
     }
 }
@@ -411,9 +431,9 @@ void assert_data(const unsigned char* exp, size_t expsize,
 
 static bool get_compare_result(const char* cmp, int c3, bool eq) {
     if (cmp[0] == '<')
-        return c3 < 0 || ((cmp[1] == '=') & eq);
+        return c3 < 0 || ((cmp[1] == '=') && eq);
     if (cmp[0] == '>')
-        return c3 > 0 || ((cmp[1] == '=') & eq);
+        return c3 > 0 || ((cmp[1] == '=') && eq);
     return (cmp[0] == '=') == eq;
 }
 
@@ -706,6 +726,7 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
 #ifdef CTEST_COLOR_OK
     color_print(color, results);
 #else
+    UNUSED(color);
     printf(results);
 #endif
     return num_fail;

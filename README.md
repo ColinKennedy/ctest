@@ -130,10 +130,13 @@ The CTEST_COLOR_OK will turn the [OK] messages green if enabled. Some users
 only want failing tests to draw attention and can leave this out then.
 
 ## How To Test
+TODO: Finish
 ```sh
-CC=`which gcc` CXX=`which g++` cmake -S . -B build
+rez-env gcc cppcheck
+CC=`which gcc` CXX=`which g++` cmake -S . -B build -DENABLE_CPPCHECK=ON
 cmake --build build --target test
 ```
+cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DENABLE_CPPCHECK=ON
 
 set CXX=C:\Program Files\LLVM\bin\clang++.exe
 set CC=C:\Program Files\LLVM\bin\clang.exe

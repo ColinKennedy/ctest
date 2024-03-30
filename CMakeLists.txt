@@ -14,4 +14,6 @@ if(APPLE AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "-no-pie")
 endif()
 
+include(cmake/ci.cmake)
+
 add_subdirectory(tests)
