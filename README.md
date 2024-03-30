@@ -130,7 +130,9 @@ The CTEST_COLOR_OK will turn the [OK] messages green if enabled. Some users
 only want failing tests to draw attention and can leave this out then.
 
 ## How To Test
+### Configuring
 TODO: Finish
+
 ```sh
 rez-env gcc cppcheck
 CC=`which gcc` CXX=`which g++` cmake -S . -B build -DENABLE_CPPCHECK=ON
@@ -142,3 +144,33 @@ set CXX=C:\Program Files\LLVM\bin\clang++.exe
 set CC=C:\Program Files\LLVM\bin\clang.exe
 cmake -S . -B build
 cmake --build build --target test
+
+
+### Test A Whole File
+TODO FINISH These
+```sh
+CC=`which gcc` CXX=`which g++` cmake -S . -B build -DTEST_FILE=tests/test_main.cpp
+```
+
+### Test A Suite
+```sh
+CC=`which gcc` CXX=`which g++` cmake -S . -B build -DTEST_FILE=tests/test_main.cpp -DTEST_SUITE=simple
+```
+
+### Test A Test By-Name
+```sh
+CC=`which gcc` CXX=`which g++` cmake -S . -B build -DTEST_FILE=tests/test_main.cpp -DTEST_SUITE=simple -DTEST_NAME=single_assert
+```
+
+### Combinations
+You can combine the arguments or exclude them for different effects
+
+#### Run Every Test Matching Name
+```sh
+CC=`which gcc` CXX=`which g++` cmake -S . -B build -DTEST_SUITE=tests/test_main.cpp -DTEST_NAME=single_assert
+```
+
+#### Run Every Suite Across All Files
+```sh
+CC=`which gcc` CXX=`which g++` cmake -S . -B build -DTEST_SUITE=tests/test_main.cpp -DTEST_NAME=single_assert
+```

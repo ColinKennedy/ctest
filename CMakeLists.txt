@@ -15,5 +15,6 @@ if(APPLE AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 endif()
 
 include(cmake/ci.cmake)
+include(cmake/common.cmake)
 
 add_subdirectory(tests)
