@@ -70,12 +70,11 @@ jobs:
 
           cmake: true
           ninja: true
-          clangtidy: ${{ env.CLANG_TIDY_VERSION }}
           cppcheck: true
 
       - name: Configure CMake
         run: |
-          cmake -S . -B ./build -G "${{matrix.generator}}" -DCMAKE_BUILD_TYPE:STRING=${{matrix.build_type}}
+          cmake -S . -B ./build -G "${{matrix.generator}}" -DCMAKE_BUILD_TYPE:STRING=${{matrix.build_type}} -DENABLE_CPPCHECK=ON
 
       - name: Build
         run: |
