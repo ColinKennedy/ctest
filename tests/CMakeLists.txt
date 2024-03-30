@@ -62,8 +62,6 @@ if(NOT DEFINED TEST_NAME)
     set(TEST_NAME "\"*\"" CACHE STRING "The individual test(s) to run.")
 endif()
 
-message(DEBUG "$<TARGET_FILE:run_it> ${TEST_SUITE} ${TEST_NAME}")
-
 add_custom_target(
     test
     COMMAND $<TARGET_FILE:run_it> "${TEST_SUITE}" "${TEST_NAME}"
