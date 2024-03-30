@@ -236,7 +236,7 @@ void assert_compare_u(const char* cmp, uintmax_t exp, uintmax_t real, const char
 void assert_interval(intmax_t exp1, intmax_t exp2, intmax_t real, const char* caller, int line);
 #define ASSERT_INTERVAL(exp1, exp2, real) assert_interval(exp1, exp2, real, __FILE__, __LINE__)
 
-void assert_null(void* real, const char* caller, int line);
+void assert_null(const void* real, const char* caller, int line);
 #define ASSERT_NULL(real) assert_null((void*)real, __FILE__, __LINE__)
 
 void assert_not_null(const void* real, const char* caller, int line);
@@ -484,7 +484,7 @@ void assert_dbl_compare(const char* cmp, double exp, double real, double tol, co
     }
 }
 
-void assert_null(void* real, const char* caller, int line) {
+void assert_null(const void* real, const char* caller, int line) {
     if ((real) != NULL) {
         CTEST_ERR("%s:%d  should be NULL", caller, line);
     }

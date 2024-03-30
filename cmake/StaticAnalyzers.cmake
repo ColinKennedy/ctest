@@ -31,6 +31,8 @@ macro(enable_cppcheck WARNINGS_AS_ERRORS CPPCHECK_OPTIONS)
             # ignores code that cppcheck thinks is invalid C++
             --suppress=syntaxError
             --suppress=preprocessorErrorDirective
+            # NOTE: This codebase is meant to be C compatible so static_cast isn't an option
+            --suppress=cstyleCast
             --inconclusive)
     else()
         # if the user provides a CPPCHECK_OPTIONS with a template specified, it will override this template
