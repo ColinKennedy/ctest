@@ -290,7 +290,7 @@ static int CTEST_COLOR_OUTPUT = 1;
 char CTEST_SUITE_NAME[MAX_SIZE];
 char CTEST_TEST_EXPRESSION[MAX_SIZE];
 
-typedef int (*ctest_filter_func)(struct ctest*);
+typedef int (*ctest_filter_func)(const struct ctest*);
 
 #define ANSI_BLACK    "\033[0;30m"
 #define ANSI_RED      "\033[0;31m"
@@ -513,7 +513,7 @@ void assert_fail(const char* caller, int line) {
 }
 
 
-static int suite_all(struct ctest* t) {
+static int suite_all(const struct ctest* t) {
     UNUSED(t);
     return 1;
 }
@@ -555,7 +555,7 @@ static int glob_text(const char *pattern, const char *candidate) {
     return glob_text_(pattern, candidate, 0, 0);
 }
 
-static int suite_filter(struct ctest* t) {
+static int suite_filter(const struct ctest* t) {
     return (
         (
             // No suite filter
@@ -654,12 +654,12 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
     struct ctest* ctest_end = &CTEST_IMPL_TNAME(suite, test);
     // find begin and end of section by comparing magics
     while (1) {
-        struct ctest* t = ctest_begin-1;
+        const struct ctest* t = ctest_begin-1;
         if (t->magic != CTEST_IMPL_MAGIC) break;
         ctest_begin--;
     }
     while (1) {
-        struct ctest* t = ctest_end+1;
+        const struct ctest* t = ctest_end+1;
         if (t->magic != CTEST_IMPL_MAGIC) break;
         ctest_end++;
     }
