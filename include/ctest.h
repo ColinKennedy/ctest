@@ -677,7 +677,6 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
             CTEST_ERROR_BUFFER[0] = 0;
             CTEST_ERROR_SIZE = MSG_SIZE-1;
             CTEST_ERROR_MESSAGE = CTEST_ERROR_BUFFER;
-            // TODO: Add colors to the unittest name
 #ifdef CTEST_COLOR_OK
             printf("TEST %d/%d ", idx, total);
             printf("%s%s:%s " ANSI_NORMAL, ANSI_WHITE, test->ssname, test->ttname);
