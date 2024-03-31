@@ -627,6 +627,7 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
 {
     static int total = 0;
     static int num_ok = 0;
+    static int num_errored = 0;
     static int num_fail = 0;
     static int num_skip = 0;
     static int idx = 1;
@@ -753,7 +754,7 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
 #endif
                         num_ok++;
                     } else {
-                        num_fail++;
+                        num_errored++;
                     }
 
                 } else {
@@ -772,9 +773,9 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
     clock_t t2 = clock();
 
     const char* color = (num_fail) ? ANSI_BRED : ANSI_GREEN;
-    char results[80];
-    snprintf(results, sizeof(results), "RESULTS: %d tests (%d ok, %d failed, %d skipped) ran in %.1f ms",
-             total, num_ok, num_fail, num_skip, (double)(t2 - t1)*1000.0/CLOCKS_PER_SEC);
+    char results[92];
+    snprintf(results, sizeof(results), "RESULTS: %d tests (%d ok, %d failed, %d errored, %d skipped) ran in %.1f ms",
+             total, num_ok, num_fail, num_errored, num_skip, (double)(t2 - t1)*1000.0/CLOCKS_PER_SEC);
 #ifdef CTEST_COLOR_OK
     color_print(color, results);
 #else

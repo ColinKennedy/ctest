@@ -1,15 +1,6 @@
 Badges
 ======
 
-- Remove the TEST_FILE stuff. It's bad anyway
-- Consider adding a new category
- - ok
- - failed
- - error
-  - exceptions
-  - segfaults
- - skipped
-
 - Add supported compiler badges (GCC, CLANG)
 - Add supported C++ versions (11, 14, 17, etc)
 

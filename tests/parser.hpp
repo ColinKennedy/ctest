@@ -13,7 +13,7 @@ namespace details
     // TODO: Remove the need for TEST_REGEX, later
     std::regex const TEST_REGEX {"TEST \\d+/\\d+ (\\w+):(\\w+).*"};
     std::regex const RESULTS_REGEX {
-        "RESULTS: (\\d+) tests \\((\\d+) ok, (\\d+) failed, (\\d+) skipped\\) ran in (\\d+\\.\\d+) ms"
+        "RESULTS: (\\d+) tests \\((\\d+) ok, (\\d+) failed, (\\d+) errored, (\\d+) skipped\\) ran in (\\d+\\.\\d+) ms"
     };
 
     bool ends_with(std::string const &full, std::string const &end) {
@@ -34,6 +34,8 @@ namespace details
         return full.compare(0, start.length(), start) == 0;
     }
 
+    bool is_errored(std::string const &text) { return ends_with(text, "[ERRORED]"); }
+
     bool is_failed(std::string const &text) { return ends_with(text, "[FAILED]"); }
 
     bool is_okay(std::string const &text) { return ends_with(text, "[OK]"); }
@@ -45,6 +47,7 @@ namespace details
 
 enum TestStatus
 {
+    TestStatus_ERRORED,
     TestStatus_FAILED,
     TestStatus_OK,
     TestStatus_SKIPPED,
@@ -61,8 +64,9 @@ struct TestResults
 {
     std::vector<SingleTestCase> cases;
 
-    unsigned int number_ok;
+    unsigned int number_errored;
     unsigned int number_failed;
+    unsigned int number_ok;
     unsigned int number_skipped;
     unsigned int number_total;
     unsigned int total_time;
@@ -83,8 +87,9 @@ TestResults parse_std_out(std::string const text)
     TestStatus return_status;
 
     unsigned int number_total;
-    unsigned int number_ok;
+    unsigned int number_errored;
     unsigned int number_failed;
+    unsigned int number_ok;
     unsigned int number_skipped;
     unsigned int total_time;
 
@@ -127,12 +132,14 @@ TestResults parse_std_out(std::string const text)
             number_total = std::stoi(matches[1]);
             number_ok = std::stoi(matches[2]);
             number_failed = std::stoi(matches[3]);
-            number_skipped = std::stoi(matches[4]);
-            total_time = std::stoi(matches[5]);
+            number_errored = std::stoi(matches[4]);
+            number_skipped = std::stoi(matches[5]);
+            total_time = std::stoi(matches[6]);
 
             output.cases = cases;
-            output.number_ok = number_ok;
+            output.number_errored = number_errored;
             output.number_failed = number_failed;
+            output.number_ok = number_ok;
             output.number_skipped = number_skipped;
             output.number_total = number_total;
             output.total_time = total_time;

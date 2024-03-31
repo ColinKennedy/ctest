@@ -21,7 +21,8 @@ CTEST(bad_runtime, exception)
 
     ASSERT_EQUAL(1, results.number_total);
     ASSERT_EQUAL(0, results.number_ok);
-    ASSERT_EQUAL(1, results.number_failed);
+    ASSERT_EQUAL(0, results.number_failed);
+    ASSERT_EQUAL(1, results.number_errored);
     ASSERT_EQUAL(0, results.number_skipped);
 }
 
