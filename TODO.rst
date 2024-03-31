@@ -1,12 +1,25 @@
 Badges
 ======
 
+- Remove the TEST_FILE stuff. It's bad anyway
+- Consider adding a new category
+ - ok
+ - failed
+ - error
+  - exceptions
+  - segfaults
+ - skipped
+
 - Add supported compiler badges (GCC, CLANG)
 - Add supported C++ versions (11, 14, 17, etc)
-- Need to make it so we can have multiple testing files, not just one. But how? Probably cmake or a custom function
 
 - Add docstrings to every function
 - Change the macros to be not abbreviated?
+- Considering removinag the test count (the TEST 1/3 part)
+
+- Make sure segfault stuff works as expected
+
+- Add tests specifically for C, to make sure that it works
 
 
 GitHub Test Runners

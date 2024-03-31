@@ -29,6 +29,8 @@
 
 
 #ifdef __cplusplus
+#include <stdexcept> // std::exception
+
 extern "C" {
 #endif
 
@@ -688,21 +690,72 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
                 color_print(ANSI_BYELLOW, "[SKIPPED]");
                 num_skip++;
             } else {
+                int has_exception = 0;  // Only used in C++
                 int result = setjmp(CTEST_ERROR_);
                 if (result == 0) {
                     if (test->setup && *test->setup) (*test->setup)(test->data);
-                    if (test->data)
+                    if (test->data) {
                         test->run.unary(test->data);
-                    else
-                        test->run.nullary();
-                    if (test->teardown && *test->teardown) (*test->teardown)(test->data);
-                    // if we got here it's ok
+#ifdef __cplusplus
+                        try {
+                            test->run.unary(test->data);
+                        }
+                        catch(std::exception const &error) {
+                            has_exception = 1;
+
 #ifdef CTEST_COLOR_OK
-                    color_print(ANSI_BGREEN, "[OK]");
+                            printf(
+                                "%s[FAIL]\nException caught:\n%s\n" ANSI_NORMAL,
+                                ANSI_BRED,
+                                error.what()
+                            );
 #else
-                    printf("[OK]\n");
+                            printf(
+                                "[FAIL]\nException caught:\n%s\n",
+                                error.what()
+                            );
 #endif
-                    num_ok++;
+                        }
+#else
+                        test->run.unary(test->data);
+#endif
+                    } else {
+#ifdef __cplusplus
+                        try {
+                            test->run.nullary();
+                        }
+                        catch(std::exception const &error) {
+                            has_exception = 1;
+
+#ifdef CTEST_COLOR_OK
+                            printf(
+                                "%s[FAIL]\nException caught:\n%s\n" ANSI_NORMAL,
+                                ANSI_BRED,
+                                error.what()
+                            );
+#else
+                            printf(
+                                "[FAIL]\nException caught:\n%s\n",
+                                error.what()
+                            );
+#endif
+                        }
+#else
+                        test->run.nullary();
+#endif
+                        if (test->teardown && *test->teardown) (*test->teardown)(test->data);
+
+                        if (!has_exception) {
+#ifdef CTEST_COLOR_OK
+                            color_print(ANSI_BGREEN, "[OK]");
+#else
+                            printf("[OK]\n");
+#endif
+                            num_ok++;
+                        } else {
+                            num_fail++;
+                        }
+                    }
                 } else {
 #ifdef CTEST_COLOR_OK
                     color_print(ANSI_BRED, "[FAIL]");
@@ -727,6 +780,7 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
 #else
     UNUSED(color);
     printf(results);
+    printf("\n");
 #endif
     return num_fail;
 }

@@ -13,8 +13,9 @@ endfunction()
 
 create_cli_and_test(test_arguments)
 create_cli_and_test(test_empty)
-create_cli_and_test(test_single)
+create_cli_and_test(test_exception)
 create_cli_and_test(test_mytests)
+create_cli_and_test(test_single)
 
 
 add_executable(run_it
@@ -31,6 +32,7 @@ add_dependencies(
 
     test_arguments
     test_empty
+    test_exception
     test_single
 
     test_mytests

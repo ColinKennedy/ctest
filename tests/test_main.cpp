@@ -14,6 +14,17 @@
 #include "pather.hpp"
 
 
+CTEST(bad_runtime, exception)
+{
+    auto const raw = cli::execute_command(pather::make_absolute("test_exception"));
+    auto const results = parser::parse_std_out(raw.std_out);
+
+    ASSERT_EQUAL(1, results.number_total);
+    ASSERT_EQUAL(0, results.number_ok);
+    ASSERT_EQUAL(1, results.number_failed);
+    ASSERT_EQUAL(0, results.number_skipped);
+}
+
 CTEST(simple, empty_no_tests)
 {
     auto const raw = cli::execute_command(pather::make_absolute("test_empty"));
