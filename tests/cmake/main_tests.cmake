@@ -40,6 +40,16 @@ add_dependencies(
 
 add_options(run_it)
 
+if(NOT DEFINED TEST_SUITE)
+    # TODO: Make sure these arguments works as expected
+    set(TEST_SUITE "\"*\"" CACHE STRING "The suite(s) to run tests for.")
+endif()
+
+if(NOT DEFINED TEST_NAME)
+    # TODO: Make sure these arguments works as expected
+    set(TEST_NAME "\"*\"" CACHE STRING "The individual test(s) to run.")
+endif()
+
 add_custom_command(
     OUTPUT run_it_command
     COMMAND $<TARGET_FILE:run_it> "${TEST_SUITE}" "${TEST_NAME}"

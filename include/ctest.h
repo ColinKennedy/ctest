@@ -695,7 +695,6 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
                 if (result == 0) {
                     if (test->setup && *test->setup) (*test->setup)(test->data);
                     if (test->data) {
-                        test->run.unary(test->data);
 #ifdef __cplusplus
                         try {
                             test->run.unary(test->data);
@@ -743,19 +742,20 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
 #else
                         test->run.nullary();
 #endif
-                        if (test->teardown && *test->teardown) (*test->teardown)(test->data);
-
-                        if (!has_exception) {
-#ifdef CTEST_COLOR_OK
-                            color_print(ANSI_BGREEN, "[OK]");
-#else
-                            printf("[OK]\n");
-#endif
-                            num_ok++;
-                        } else {
-                            num_fail++;
-                        }
                     }
+                    if (test->teardown && *test->teardown) (*test->teardown)(test->data);
+
+                    if (!has_exception) {
+#ifdef CTEST_COLOR_OK
+                        color_print(ANSI_BGREEN, "[OK]");
+#else
+                        printf("[OK]\n");
+#endif
+                        num_ok++;
+                    } else {
+                        num_fail++;
+                    }
+
                 } else {
 #ifdef CTEST_COLOR_OK
                     color_print(ANSI_BRED, "[FAIL]");
