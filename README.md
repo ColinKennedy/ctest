@@ -142,7 +142,7 @@ cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DENABLE_CPPCHECK=ON
 
 set CXX=C:\Program Files\LLVM\bin\clang++.exe
 set CC=C:\Program Files\LLVM\bin\clang.exe
-cmake -S . -B build
+cmake -S . -B build -G"MinGW Makefiles"
 cmake --build build --target test
 
 

@@ -19,7 +19,13 @@
 #if defined(__clang__)
 // https://clang.llvm.org/docs/UsersManual.html#controlling-diagnostics-via-pragmas
 #pragma clang system_header
+// It's unfortunate but it looks like clang cannot easily see like GCC and MSVC
+// can that CTEST is actually in-use. So we need to disable some things or it
+// will not compile.
+//
+#pragma clang diagnostic ignored "-Wunused-variable"
 #pragma clang diagnostic ignored "-Wunused-parameter"
+// TODO: Remove this -Werror?
 #pragma clang diagnostic ignored "-Werror"
 #elif defined(__GNUC__) || defined(__GNUG__)
 #pragma GCC system_header
@@ -114,13 +120,12 @@ struct ctest {
 #if defined(__APPLE__)
 #define CTEST_IMPL_SECTION __attribute__ ((used, section ("__DATA, .ctest"), aligned(1)))
 #define CTEST_IMPL_SECTION_PREFIX
-#elif defined(__GNU__)
+#elif defined(__GNU__) || defined(__clang__)
 #define CTEST_IMPL_SECTION __attribute__ ((used, section (".ctest"), aligned(1)))
 #define CTEST_IMPL_SECTION_PREFIX
-#elif defined(_WIN32)
+#elif defined(_MSC_VER)
 #pragma data_seg(".ctest")
 #pragma const_seg(".ctest")
-
 #define CTEST_IMPL_SECTION
 #define CTEST_IMPL_SECTION_PREFIX __declspec(allocate(".ctest"))
 #else
@@ -568,9 +573,15 @@ static int glob_text(const char *pattern, const char *candidate) {
     return glob_text_(pattern, candidate, 0, 0);
 }
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-WknownConditionTrueFalse"
+#endif
 static int suite_filter(const struct ctest* t) {
     return (
         (
+            // your code for which the warning gets suppressed
+            // not suppressed here
             // No suite filter
             CTEST_SUITE_NAME == NULL || CTEST_SUITE_NAME[0] == '\0'
             // ... Or a matching suite name
@@ -584,6 +595,9 @@ static int suite_filter(const struct ctest* t) {
         )
     );
 }
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 static void color_print(const char* color, const char* text) {
     if (CTEST_COLOR_OUTPUT)
