@@ -632,6 +632,10 @@ static void sighandler(int signum)
 }
 #endif
 
+static struct ctest* test;
+static struct ctest* ctest_begin = &CTEST_IMPL_TNAME(suite, test);
+static struct ctest* ctest_end = &CTEST_IMPL_TNAME(suite, test);
+
 int ctest_main(int argc, const char *argv[]);
 
 /// Add `'*'` as a suffix to `text` in a new `result` buffer if it's needed.
@@ -656,6 +660,22 @@ void append_wild_char_suffix(const char *text, char *result) {
         strcat(result, "*");
     }
 #endif
+}
+
+void ctest_initialize_ctest_range()
+{
+    // find begin and end of section by comparing magics
+    while (1) {
+        const struct ctest* t = ctest_begin-1;
+        if (t->magic != CTEST_IMPL_MAGIC) break;
+        ctest_begin--;
+    }
+    while (1) {
+        const struct ctest* t = ctest_end+1;
+        if (t->magic != CTEST_IMPL_MAGIC) break;
+        ctest_end++;
+    }
+    ctest_end++;    // end after last one
 }
 
 #if defined(__GNUC__)
@@ -698,23 +718,8 @@ NO_SANITIZE int ctest_main(int argc, const char *argv[])
 #endif
     clock_t t1 = clock();
 
-    struct ctest* ctest_begin = &CTEST_IMPL_TNAME(suite, test);
-    struct ctest* ctest_end = &CTEST_IMPL_TNAME(suite, test);
-    // find begin and end of section by comparing magics
-    while (1) {
-        const struct ctest* t = ctest_begin-1;
-        if (t->magic != CTEST_IMPL_MAGIC) break;
-        ctest_begin--;
-    }
-    while (1) {
-        const struct ctest* t = ctest_end+1;
-        if (t->magic != CTEST_IMPL_MAGIC) break;
-        ctest_end++;
-    }
-    ctest_end++;    // end after last one
+    ctest_initialize_ctest_range();
 
-    // TODO: This could be folded into the other for loop?
-    static struct ctest* test;
     for (test = ctest_begin; test != ctest_end; test++) {
         if (test == &CTEST_IMPL_TNAME(suite, test)) continue;
         if (filter(test)) total++;
