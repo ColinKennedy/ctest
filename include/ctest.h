@@ -117,12 +117,15 @@ struct ctest {
 #elif defined(__GNU__)
 #define CTEST_IMPL_SECTION __attribute__ ((used, section (".ctest"), aligned(1)))
 #define CTEST_IMPL_SECTION_PREFIX
-#else
+#elif defined(_WIN32)
 #pragma data_seg(".ctest")
 #pragma const_seg(".ctest")
 
 #define CTEST_IMPL_SECTION
 #define CTEST_IMPL_SECTION_PREFIX __declspec(allocate(".ctest"))
+#else
+#define CTEST_IMPL_SECTION
+#define CTEST_IMPL_SECTION_PREFIX
 #endif
 
 #define CTEST_IMPL_STRUCT(sname, tname, tskip, tdata, tsetup, tteardown) \
@@ -624,12 +627,21 @@ int ctest_main(int argc, const char *argv[]);
 ///
 void append_wild_char_suffix(const char *text, char *result) {
     size_t length = strlen(text);
+
+#if defined(_WIN32)
     size_t new_length = length + 2;
     strcpy_s(result, new_length, text);
 
     if (length == 0 || text[length - 1] != '*') {
         strcat_s(result, new_length, "*");
     }
+#else
+    strcpy(result, text);
+
+    if (length == 0 || text[length - 1] != '*') {
+        strcat_s(result, "*");
+    }
+#endif
 }
 
 #if defined(__GNU__)
