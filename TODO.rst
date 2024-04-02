@@ -13,6 +13,11 @@ Badges
 - Make sure segfault stuff works as expected
 
 - Add tests specifically for C, to make sure that it works
+- Add santizers
+ - address sanitizers
+ - UB sanitizers
+ - thread sanitizers
+ - etc sanitizers
 
 
 GitHub Test Runners
