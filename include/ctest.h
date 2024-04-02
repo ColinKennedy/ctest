@@ -40,7 +40,7 @@
 extern "C" {
 #endif
 
-#ifdef __GNUC__
+#if defined(__GNUC__) || defined(__GNUG__)
 #define CTEST_IMPL_FORMAT_PRINTF(a, b) __attribute__ ((format(printf, a, b)))
 #else
 #define CTEST_IMPL_FORMAT_PRINTF(a, b)
@@ -120,7 +120,7 @@ struct ctest {
 #if defined(__APPLE__)
 #define CTEST_IMPL_SECTION __attribute__ ((used, section ("__DATA, .ctest"), aligned(1)))
 #define CTEST_IMPL_SECTION_PREFIX
-#elif defined(__GNU__) || defined(__clang__)
+#elif defined(__GNUC__) || defined(__GNUG__) || defined(__clang__)
 #define CTEST_IMPL_SECTION __attribute__ ((used, section (".ctest"), aligned(1)))
 #define CTEST_IMPL_SECTION_PREFIX
 #elif defined(_MSC_VER)
@@ -658,7 +658,7 @@ void append_wild_char_suffix(const char *text, char *result) {
 #endif
 }
 
-#if defined(__GNU__)
+#if defined(__GNUC__)
 #define NO_SANITIZE __attribute__((no_sanitize_address))
 #else
 #define NO_SANITIZE
