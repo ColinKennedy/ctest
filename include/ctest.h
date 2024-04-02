@@ -711,8 +711,6 @@ NO_SANITIZE int ctest_main(int argc, const char *argv[])
                 color_print(ANSI_BYELLOW, "[SKIPPED]");
                 num_skip++;
             } else {
-                int has_exception = 0;  // Only used in C++
-
 // Apparently MSVC has a bug in their warning for POD structs. The bug probably
 // applies here. Just ignore the warning.
 //
@@ -725,6 +723,8 @@ NO_SANITIZE int ctest_main(int argc, const char *argv[])
                     if (test->setup && *test->setup) (*test->setup)(test->data);
                     if (test->data) {
 #ifdef __cplusplus
+                        int has_exception = 0;  // Only used in C++
+
                         try {
                             test->run.unary(test->data);
                         }
