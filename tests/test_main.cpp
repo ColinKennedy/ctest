@@ -16,7 +16,7 @@
 
 CTEST(bad_runtime, exception)
 {
-    auto const raw = cli::execute_command(pather::make_absolute("test_exception"));
+    auto const raw = cli::execute_command(pather::make_absolute("test_exception \"*\""));
     auto const results = parser::parse_std_out(raw.std_out);
 
     ASSERT_EQUAL(1, results.number_total);
@@ -28,7 +28,7 @@ CTEST(bad_runtime, exception)
 
 CTEST(simple, empty_no_tests)
 {
-    auto const raw = cli::execute_command(pather::make_absolute("test_empty"));
+    auto const raw = cli::execute_command(pather::make_absolute("test_empty \"*\""));
 
     ASSERT_EQUAL(cli::ExitCode_SUCCESS, raw.exit_code);
 }
@@ -36,7 +36,7 @@ CTEST(simple, empty_no_tests)
 
 CTEST(simple, single_assert)
 {
-    auto const raw = cli::execute_command(pather::make_absolute("test_single"));
+    auto const raw = cli::execute_command(pather::make_absolute("test_single \"*\""));
 
     ASSERT_EQUAL(cli::ExitCode_SUCCESS, raw.exit_code);
 }
@@ -44,7 +44,7 @@ CTEST(simple, single_assert)
 
 CTEST(arguments, no_arguments)
 {
-    auto const raw = cli::execute_command(pather::make_absolute("test_arguments"));
+    auto const raw = cli::execute_command(pather::make_absolute("test_arguments \"*\""));
     auto const results = parser::parse_std_out(raw.std_out);
 
     ASSERT_EQUAL(4, results.cases.size());
@@ -55,7 +55,7 @@ CTEST(arguments, no_arguments)
 
 CTEST(arguments, suite_argument)
 {
-    auto const raw = cli::execute_command(pather::make_absolute("test_arguments suitey"));
+    auto const raw = cli::execute_command(pather::make_absolute("test_arguments suitey:"));
     auto const results = parser::parse_std_out(raw.std_out);
     auto& cases = results.cases;
 
@@ -72,7 +72,7 @@ CTEST(arguments, suite_argument)
 
 CTEST(arguments, suite_and_name_argument)
 {
-    auto const raw = cli::execute_command(pather::make_absolute("test_arguments suitey test1"));
+    auto const raw = cli::execute_command(pather::make_absolute("test_arguments suitey:test1"));
     auto const results = parser::parse_std_out(raw.std_out);
     auto& cases = results.cases;
 
@@ -83,7 +83,7 @@ CTEST(arguments, suite_and_name_argument)
 
 CTEST(globbing, suite_and_test_name)
 {
-    auto const raw = cli::execute_command(pather::make_absolute("test_arguments \"su*\" \"tes*foo\""));
+    auto const raw = cli::execute_command(pather::make_absolute("test_arguments \"su*:tes*foo\""));
     auto const results = parser::parse_std_out(raw.std_out);
     auto& cases = results.cases;
 
@@ -94,7 +94,7 @@ CTEST(globbing, suite_and_test_name)
 
 CTEST(globbing, suite_name)
 {
-    auto const raw = cli::execute_command(pather::make_absolute("test_arguments \"ano*\""));
+    auto const raw = cli::execute_command(pather::make_absolute("test_arguments \"ano*:\""));
     auto const results = parser::parse_std_out(raw.std_out);
     auto& cases = results.cases;
 
@@ -105,7 +105,7 @@ CTEST(globbing, suite_name)
 
 CTEST(globbing, test_name)
 {
-    auto const raw = cli::execute_command(pather::make_absolute("test_arguments another \"foo*\""));
+    auto const raw = cli::execute_command(pather::make_absolute("test_arguments \"another:foo*\""));
     auto const results = parser::parse_std_out(raw.std_out);
     auto& cases = results.cases;
 
@@ -116,7 +116,7 @@ CTEST(globbing, test_name)
 
 CTEST(invalids, unknown_suite)
 {
-    auto const raw = cli::execute_command(pather::make_absolute("test_arguments does_not_exist"));
+    auto const raw = cli::execute_command(pather::make_absolute("test_arguments does_not_exist:"));
     auto const results = parser::parse_std_out(raw.std_out);
     auto& cases = results.cases;
 
@@ -126,7 +126,7 @@ CTEST(invalids, unknown_suite)
 
 CTEST(invalids, unknown_test)
 {
-    auto const raw = cli::execute_command(pather::make_absolute("test_arguments suitey missing"));
+    auto const raw = cli::execute_command(pather::make_absolute("test_arguments suitey:missing"));
     auto const results = parser::parse_std_out(raw.std_out);
     auto& cases = results.cases;
 
@@ -136,7 +136,7 @@ CTEST(invalids, unknown_test)
 
 CTEST(miscellaneous, mytests)
 {
-    auto const raw = cli::execute_command(pather::make_absolute("test_mytests"));
+    auto const raw = cli::execute_command(pather::make_absolute("test_mytests \"*\""));
     auto const results = parser::parse_std_out(raw.std_out);
 
     ASSERT_EQUAL(35, results.number_total);
