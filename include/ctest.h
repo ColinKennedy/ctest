@@ -33,7 +33,6 @@
 // TODO: Finish this one?
 #endif
 
-
 #ifdef __cplusplus
 #include <stdexcept> // std::exception
 
@@ -49,6 +48,7 @@ extern "C" {
 #include <inttypes.h> /* intmax_t, uintmax_t, PRI* */
 #include <stdbool.h> /* bool, true, false */
 #include <stddef.h> /* size_t */
+#include <string.h>  /* strdup */
 
 #if defined(_WIN32) && defined(__clang__)
 #define PRIdMAX "jd" /* intmax_t */
@@ -99,6 +99,7 @@ struct ctest {
     ctest_setup_func* setup;
     ctest_teardown_func* teardown;
 
+    int enabled; // TODO: Maybe make into bools?
     int skip;
 
     unsigned int magic;
@@ -133,7 +134,7 @@ struct ctest {
 #define CTEST_IMPL_SECTION_PREFIX
 #endif
 
-#define CTEST_IMPL_STRUCT(sname, tname, tskip, tdata, tsetup, tteardown) \
+#define CTEST_IMPL_STRUCT(sname, tname, tenabled, tskip, tdata, tsetup, tteardown) \
     static CTEST_IMPL_SECTION_PREFIX struct ctest CTEST_IMPL_TNAME(sname, tname) CTEST_IMPL_SECTION = { \
         #sname, \
         #tname, \
@@ -141,6 +142,7 @@ struct ctest {
         tdata, \
         (ctest_setup_func*) tsetup, \
         (ctest_teardown_func*) tteardown, \
+        tenabled, \
         tskip, \
         CTEST_IMPL_MAGIC, \
     }
@@ -158,17 +160,17 @@ struct ctest {
     template <typename T> void CTEST_IMPL_TEARDOWN_FNAME(sname)(T*) { } \
     struct CTEST_IMPL_DATA_SNAME(sname)
 
-#define CTEST_IMPL_CTEST(sname, tname, tskip) \
+#define CTEST_IMPL_CTEST(sname, tname, tenabled, tskip) \
     static void CTEST_IMPL_FNAME(sname, tname)(void); \
-    CTEST_IMPL_STRUCT(sname, tname, tskip, NULL, NULL, NULL); \
+    CTEST_IMPL_STRUCT(sname, tname, tenabled, tskip, NULL, NULL, NULL); \
     static void CTEST_IMPL_FNAME(sname, tname)(void)
 
-#define CTEST_IMPL_CTEST2(sname, tname, tskip) \
+#define CTEST_IMPL_CTEST2(sname, tname, tenabled, tskip) \
     static struct CTEST_IMPL_DATA_SNAME(sname) CTEST_IMPL_DATA_TNAME(sname, tname); \
     static void CTEST_IMPL_FNAME(sname, tname)(struct CTEST_IMPL_DATA_SNAME(sname)* data); \
     static void (*CTEST_IMPL_SETUP_TPNAME(sname, tname))(struct CTEST_IMPL_DATA_SNAME(sname)*) = &CTEST_IMPL_SETUP_FNAME(sname)<struct CTEST_IMPL_DATA_SNAME(sname)>; \
     static void (*CTEST_IMPL_TEARDOWN_TPNAME(sname, tname))(struct CTEST_IMPL_DATA_SNAME(sname)*) = &CTEST_IMPL_TEARDOWN_FNAME(sname)<struct CTEST_IMPL_DATA_SNAME(sname)>; \
-    CTEST_IMPL_STRUCT(sname, tname, tskip, &CTEST_IMPL_DATA_TNAME(sname, tname), &CTEST_IMPL_SETUP_TPNAME(sname, tname), &CTEST_IMPL_TEARDOWN_TPNAME(sname, tname)); \
+    CTEST_IMPL_STRUCT(sname, tname, tenabled, tskip, &CTEST_IMPL_DATA_TNAME(sname, tname), &CTEST_IMPL_SETUP_TPNAME(sname, tname), &CTEST_IMPL_TEARDOWN_TPNAME(sname, tname)); \
     static void CTEST_IMPL_FNAME(sname, tname)(struct CTEST_IMPL_DATA_SNAME(sname)* data)
 
 #else
@@ -189,15 +191,15 @@ struct ctest {
     static void (*CTEST_IMPL_TEARDOWN_FPNAME(sname))(struct CTEST_IMPL_DATA_SNAME(sname)*); \
     struct CTEST_IMPL_DATA_SNAME(sname)
 
-#define CTEST_IMPL_CTEST(sname, tname, tskip) \
+#define CTEST_IMPL_CTEST(sname, tname, tenabled, tskip) \
     static void CTEST_IMPL_FNAME(sname, tname)(void); \
-    CTEST_IMPL_STRUCT(sname, tname, tskip, NULL, NULL, NULL); \
+    CTEST_IMPL_STRUCT(sname, tname, tenabled, tskip, NULL, NULL, NULL); \
     static void CTEST_IMPL_FNAME(sname, tname)(void)
 
-#define CTEST_IMPL_CTEST2(sname, tname, tskip) \
+#define CTEST_IMPL_CTEST2(sname, tname, tenabled, tskip) \
     static struct CTEST_IMPL_DATA_SNAME(sname) CTEST_IMPL_DATA_TNAME(sname, tname); \
     static void CTEST_IMPL_FNAME(sname, tname)(struct CTEST_IMPL_DATA_SNAME(sname)* data); \
-    CTEST_IMPL_STRUCT(sname, tname, tskip, &CTEST_IMPL_DATA_TNAME(sname, tname), &CTEST_IMPL_SETUP_FPNAME(sname), &CTEST_IMPL_TEARDOWN_FPNAME(sname)); \
+    CTEST_IMPL_STRUCT(sname, tname, tenabled, tskip, &CTEST_IMPL_DATA_TNAME(sname, tname), &CTEST_IMPL_SETUP_FPNAME(sname), &CTEST_IMPL_TEARDOWN_FPNAME(sname)); \
     static void CTEST_IMPL_FNAME(sname, tname)(struct CTEST_IMPL_DATA_SNAME(sname)* data)
 
 #endif
@@ -205,11 +207,11 @@ struct ctest {
 void CTEST_LOG(const char* fmt, ...) CTEST_IMPL_FORMAT_PRINTF(1, 2);
 void CTEST_ERR(const char* fmt, ...) CTEST_IMPL_FORMAT_PRINTF(1, 2);  // doesn't return
 
-#define CTEST(sname, tname) CTEST_IMPL_CTEST(sname, tname, 0)
-#define CTEST_SKIP(sname, tname) CTEST_IMPL_CTEST(sname, tname, 1)
+#define CTEST(sname, tname) CTEST_IMPL_CTEST(sname, tname, 0, 0)
+#define CTEST_SKIP(sname, tname) CTEST_IMPL_CTEST(sname, tname, 0, 1)
 
-#define CTEST2(sname, tname) CTEST_IMPL_CTEST2(sname, tname, 0)
-#define CTEST2_SKIP(sname, tname) CTEST_IMPL_CTEST2(sname, tname, 1)
+#define CTEST2(sname, tname) CTEST_IMPL_CTEST2(sname, tname, 0, 0)
+#define CTEST2_SKIP(sname, tname) CTEST_IMPL_CTEST2(sname, tname, 0, 1)
 
 
 void assert_str(const char* cmp, const char* exp, const char* real, const char* caller, int line);
@@ -643,7 +645,7 @@ int ctest_main(int argc, const char *argv[]);
 /// @param text The string which may or may not end in `'*'`. e.g. `"foo"`.
 /// @param result An return argument to save the new string out to.
 ///
-void append_wild_char_suffix(const char *text, char *result) {
+static void append_wild_char_suffix(const char *text, char *result) {
     size_t length = strlen(text);
 
 #if defined(_WIN32)
@@ -662,7 +664,7 @@ void append_wild_char_suffix(const char *text, char *result) {
 #endif
 }
 
-void ctest_initialize_ctest_range()
+static void ctest_initialize_ctest_range()
 {
     // find begin and end of section by comparing magics
     while (1) {
@@ -678,12 +680,97 @@ void ctest_initialize_ctest_range()
     ctest_end++;    // end after last one
 }
 
+static uint8_t ctest_initializes_every_test(int filter_count, const char *filters[]) {
+    struct ctest* test;
+    uint8_t total = 0;
+
+    for (int index = 1; index < filter_count; ++index) {
+        const char* suite_and_test = filters[index];
+
+        if (suite_and_test[0] == '*' && strlen(suite_and_test) == 1)
+        {
+            // * was found so we must match (and later run) all tests
+            for (test = ctest_begin; test != ctest_end; test++) {
+                if (test == &CTEST_IMPL_TNAME(suite, test)) continue;
+
+                test->enabled = 1;
+                total++;
+            }
+
+            break;
+        }
+    }
+
+    return total;
+}
+
+static uint8_t ctest_initialize_tests_with_filters(
+    struct ctest* ctest_begin,
+    struct ctest* ctest_end,
+    int filter_count,
+    const char *filters[]
+)
+{
+    uint8_t total = 0;
+    struct ctest* test;
+
+    for (test = ctest_begin; test != ctest_end; test++) {
+        if (test == &CTEST_IMPL_TNAME(suite, test)) continue;
+
+        for (int index = 1; index < filter_count; ++index) {
+            char* suite_and_test = strdup(filters[index]);
+
+            if (suite_and_test == NULL)
+            {
+                // TODO:Add a panic and exeit here
+                // fprintf(stderr, "Memory allocation failed\n");
+                // return 1; // Return an error code
+                return 0;  // TODO: This is temporary
+            }
+
+            uint8_t separator = (strchr(suite_and_test, ':') - suite_and_test);
+            suite_and_test[separator] = '\0'; // Null terminate the first part
+            const char* suite_expression = suite_and_test;  // The suite name
+            const char* test_expression = &suite_and_test[separator + 1];  // The test name
+
+            append_wild_char_suffix(suite_expression, CTEST_SUITE_NAME);
+            append_wild_char_suffix(test_expression, CTEST_TEST_EXPRESSION);
+
+            if (suite_filter(test)) {
+                test->enabled = 1;
+                ++total;
+
+                break;
+            }
+        }
+    }
+
+    return total;
+}
+
 int ctest_initialize_all_tests(
     int filter_count,
     const char *filters[]
 )
 {
     ctest_initialize_ctest_range();
+
+    uint8_t total = ctest_initializes_every_test(
+        filter_count,
+        filters
+    );
+
+    if (total)
+    {
+        return total;
+    }
+
+    return ctest_initialize_tests_with_filters(
+        ctest_begin,
+        ctest_end,
+        filter_count,
+        filters
+    );
 
     return 0;
 }
@@ -696,7 +783,6 @@ int ctest_initialize_all_tests(
 
 NO_SANITIZE int ctest_main(int argc, const char *argv[])
 {
-    static int total = 0;
     static int num_ok = 0;
     static int num_errored = 0;
     static int num_fail = 0;
@@ -708,15 +794,11 @@ NO_SANITIZE int ctest_main(int argc, const char *argv[])
     signal(SIGSEGV, sighandler);
 #endif
 
-    // TODO: Using suite_filter twice here is unclean. Separate to a different function, later
-    if (argc == 2) {
-        append_wild_char_suffix(argv[1], CTEST_SUITE_NAME);
-        filter = suite_filter;
-    } else if (argc == 3) {
-        append_wild_char_suffix(argv[1], CTEST_SUITE_NAME);
-        append_wild_char_suffix(argv[2], CTEST_TEST_EXPRESSION);
-        filter = suite_filter;
-    }
+    // if (argc == 0)
+    // {
+    //     // TODO: Print how to use this
+    // }
+
 #ifndef CTEST_COLOR_OK
     CTEST_COLOR_OUTPUT = 0;
 #else
@@ -728,16 +810,10 @@ NO_SANITIZE int ctest_main(int argc, const char *argv[])
 #endif
     clock_t t1 = clock();
 
-    ctest_initialize_all_tests(argc, argv);
+    uint8_t total = ctest_initialize_all_tests(argc, argv);
 
     for (test = ctest_begin; test != ctest_end; test++) {
-        if (test == &CTEST_IMPL_TNAME(suite, test)) continue;
-        if (filter(test)) total++;
-    }
-
-    for (test = ctest_begin; test != ctest_end; test++) {
-        if (test == &CTEST_IMPL_TNAME(suite, test)) continue;
-        if (filter(test)) {
+        if (test->enabled) {
             CTEST_ERROR_BUFFER[0] = 0;
             CTEST_ERROR_SIZE = MSG_SIZE-1;
             CTEST_ERROR_MESSAGE = CTEST_ERROR_BUFFER;
