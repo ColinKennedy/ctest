@@ -26,7 +26,7 @@ namespace cli
 int WIFEXITED(int status) { return (status == -1) ? 1 : 0; }
 int WEXITSTATUS(int status) { return (status == 0) ? 1 : 0; }
 
-#if defined(__MSC_VER) || defined(__clang__)
+#if defined(_MSC_VER) || defined(__clang__)
 #define popen(...) _popen(__VA_ARGS__)
 #define pclose(...) _pclose(__VA_ARGS__)
 #endif

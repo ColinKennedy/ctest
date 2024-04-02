@@ -44,7 +44,7 @@ extern "C" {
 #include <stdbool.h> /* bool, true, false */
 #include <stddef.h> /* size_t */
 
-#ifdef _WIN32
+#if defined(_WIN32) && defined(__clang__)
 #define PRIdMAX "jd" /* intmax_t */
 #define PRIuMAX "ju" /* uintmax_t */
 #endif
@@ -111,14 +111,22 @@ struct ctest {
 #define CTEST_IMPL_TEARDOWN_TPNAME(sname, tname) CTEST_IMPL_NAME(sname##_##tname##_teardown_ptr)
 
 #define CTEST_IMPL_MAGIC (0xdeadbeef)
-#ifdef __APPLE__
+#if defined(__APPLE__)
 #define CTEST_IMPL_SECTION __attribute__ ((used, section ("__DATA, .ctest"), aligned(1)))
-#else
+#define CTEST_IMPL_SECTION_PREFIX
+#elif defined(__GNU__)
 #define CTEST_IMPL_SECTION __attribute__ ((used, section (".ctest"), aligned(1)))
+#define CTEST_IMPL_SECTION_PREFIX
+#else
+#pragma data_seg(".ctest")
+#pragma const_seg(".ctest")
+
+#define CTEST_IMPL_SECTION
+#define CTEST_IMPL_SECTION_PREFIX __declspec(allocate(".ctest"))
 #endif
 
 #define CTEST_IMPL_STRUCT(sname, tname, tskip, tdata, tsetup, tteardown) \
-    static struct ctest CTEST_IMPL_TNAME(sname, tname) CTEST_IMPL_SECTION = { \
+    static CTEST_IMPL_SECTION_PREFIX struct ctest CTEST_IMPL_TNAME(sname, tname) CTEST_IMPL_SECTION = { \
         #sname, \
         #tname, \
         { (ctest_nullary_run_func) CTEST_IMPL_FNAME(sname, tname) }, \
@@ -138,8 +146,8 @@ struct ctest {
     template <> void CTEST_IMPL_TEARDOWN_FNAME(sname)(struct CTEST_IMPL_DATA_SNAME(sname)* data)
 
 #define CTEST_DATA(sname) \
-    template <typename T> void CTEST_IMPL_SETUP_FNAME(sname)(T* data) { } \
-    template <typename T> void CTEST_IMPL_TEARDOWN_FNAME(sname)(T* data) { } \
+    template <typename T> void CTEST_IMPL_SETUP_FNAME(sname)(T*) { } \
+    template <typename T> void CTEST_IMPL_TEARDOWN_FNAME(sname)(T*) { } \
     struct CTEST_IMPL_DATA_SNAME(sname)
 
 #define CTEST_IMPL_CTEST(sname, tname, tskip) \
@@ -592,11 +600,11 @@ static void sighandler(int signum)
 
 #if defined(__unix__) || defined(__APPLE__)
     int stdout_file_descriptor = STDOUT_FILENO;
+    write(stdout_file_descriptor, msg, (unsigned int)strlen(msg));
 #elif defined(WIN32) || defined(_WIN32)
     int stdout_file_descriptor = _fileno(stdout);
+    _write(stdout_file_descriptor, msg, (unsigned int)strlen(msg));
 #endif
-
-    write(stdout_file_descriptor, msg, (unsigned int)strlen(msg));
 
     /* "Unregister" the signal handler and send the signal back to the process
      * so it can terminate as expected */
@@ -615,15 +623,22 @@ int ctest_main(int argc, const char *argv[]);
 /// @param result An return argument to save the new string out to.
 ///
 void append_wild_char_suffix(const char *text, char *result) {
-    int len = strlen(text);
-    strcpy(result, text);
+    size_t length = strlen(text);
+    size_t new_length = length + 2;
+    strcpy_s(result, new_length, text);
 
-    if (len == 0 || text[len - 1] != '*') {
-        strcat(result, "*");
+    if (length == 0 || text[length - 1] != '*') {
+        strcat_s(result, new_length, "*");
     }
 }
 
-__attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[])
+#if defined(__GNU__)
+#define NO_SANITIZE __attribute__((no_sanitize_address))
+#else
+#define NO_SANITIZE
+#endif
+
+NO_SANITIZE int ctest_main(int argc, const char *argv[])
 {
     static int total = 0;
     static int num_ok = 0;
@@ -646,10 +661,14 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
         append_wild_char_suffix(argv[2], CTEST_TEST_EXPRESSION);
         filter = suite_filter;
     }
-#ifdef CTEST_NO_COLORS
+#ifndef CTEST_COLOR_OK
     CTEST_COLOR_OUTPUT = 0;
 #else
+#ifdef _WIN32
+    CTEST_COLOR_OUTPUT = _isatty(1);
+#else
     CTEST_COLOR_OUTPUT = isatty(1);
+#endif
 #endif
     clock_t t1 = clock();
 
@@ -668,6 +687,7 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
     }
     ctest_end++;    // end after last one
 
+    // TODO: This could be folded into the other for loop?
     static struct ctest* test;
     for (test = ctest_begin; test != ctest_end; test++) {
         if (test == &CTEST_IMPL_TNAME(suite, test)) continue;
@@ -692,7 +712,15 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
                 num_skip++;
             } else {
                 int has_exception = 0;  // Only used in C++
+
+// Apparently MSVC has a bug in their warning for POD structs. The bug probably
+// applies here. Just ignore the warning.
+//
+// Reference: https://stackoverflow.com/q/45384718/3626104
+//
+#pragma warning(suppress: 4611)
                 int result = setjmp(CTEST_ERROR_);
+
                 if (result == 0) {
                     if (test->setup && *test->setup) (*test->setup)(test->data);
                     if (test->data) {
@@ -747,22 +775,14 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
                     if (test->teardown && *test->teardown) (*test->teardown)(test->data);
 
                     if (!has_exception) {
-#ifdef CTEST_COLOR_OK
                         color_print(ANSI_BGREEN, "[OK]");
-#else
-                        printf("[OK]\n");
-#endif
                         num_ok++;
                     } else {
                         num_errored++;
                     }
 
                 } else {
-#ifdef CTEST_COLOR_OK
                     color_print(ANSI_BRED, "[FAIL]");
-#else
-                    printf("[FAIL]\n");
-#endif
                     num_fail++;
                 }
                 if (CTEST_ERROR_SIZE != MSG_SIZE-1) printf("%s", CTEST_ERROR_BUFFER);
@@ -776,13 +796,9 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
     char results[92];
     snprintf(results, sizeof(results), "RESULTS: %d tests (%d ok, %d failed, %d errored, %d skipped) ran in %.1f ms",
              total, num_ok, num_fail, num_errored, num_skip, (double)(t2 - t1)*1000.0/CLOCKS_PER_SEC);
-#ifdef CTEST_COLOR_OK
+
     color_print(color, results);
-#else
-    UNUSED(color);
-    printf(results);
-    printf("\n");
-#endif
+
     return num_fail;
 }
 

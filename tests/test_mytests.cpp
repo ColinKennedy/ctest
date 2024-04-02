@@ -142,7 +142,8 @@ CTEST(ctest, test_assert_interval) {
 
 CTEST(ctest, test_assert_null) {
     ASSERT_NULL(NULL);
-    ASSERT_NULL((void*)0xdeadbeef);
+    uint64_t value = 0xdeadbeef;
+    ASSERT_NULL((void*)value);
 }
 
 CTEST(ctest, test_assert_not_null_const) {
@@ -150,7 +151,8 @@ CTEST(ctest, test_assert_not_null_const) {
 }
 
 CTEST(ctest, test_assert_not_null) {
-    ASSERT_NOT_NULL((void*)0xdeadbeef);
+    uint64_t value = 0xdeadbeef;
+    ASSERT_NOT_NULL((void*)value);
     ASSERT_NOT_NULL(NULL);
 }
 

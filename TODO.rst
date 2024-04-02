@@ -1,6 +1,8 @@
 Badges
 ======
 
+- Windows colors aren't all working
+
 - Add supported compiler badges (GCC, CLANG)
 - Add supported C++ versions (11, 14, 17, etc)
 
