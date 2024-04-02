@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - "master"
-      - "add_cli_argument_refactor"
   pull_request:
     branches:
       - "master"
