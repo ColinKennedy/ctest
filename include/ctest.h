@@ -678,6 +678,16 @@ void ctest_initialize_ctest_range()
     ctest_end++;    // end after last one
 }
 
+int ctest_initialize_all_tests(
+    int filter_count,
+    const char *filters[]
+)
+{
+    ctest_initialize_ctest_range();
+
+    return 0;
+}
+
 #if defined(__GNUC__)
 #define NO_SANITIZE __attribute__((no_sanitize_address))
 #else
@@ -718,7 +728,7 @@ NO_SANITIZE int ctest_main(int argc, const char *argv[])
 #endif
     clock_t t1 = clock();
 
-    ctest_initialize_ctest_range();
+    ctest_initialize_all_tests(argc, argv);
 
     for (test = ctest_begin; test != ctest_end; test++) {
         if (test == &CTEST_IMPL_TNAME(suite, test)) continue;
