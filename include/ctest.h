@@ -639,7 +639,7 @@ void append_wild_char_suffix(const char *text, char *result) {
     strcpy(result, text);
 
     if (length == 0 || text[length - 1] != '*') {
-        strcat_s(result, "*");
+        strcat(result, "*");
     }
 #endif
 }
@@ -733,9 +733,11 @@ NO_SANITIZE int ctest_main(int argc, const char *argv[])
 
                 if (result == 0) {
                     if (test->setup && *test->setup) (*test->setup)(test->data);
+
+                    int has_exception = 0;  // Only used in C++
+
                     if (test->data) {
 #ifdef __cplusplus
-                        int has_exception = 0;  // Only used in C++
 
                         try {
                             test->run.unary(test->data);
